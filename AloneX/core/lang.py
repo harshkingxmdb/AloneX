@@ -1,14 +1,9 @@
 # Copyright (c) 2025 TheHamkerAlone
 # Licensed under the MIT License.
-# This file is part of AloneXMusic
-# ALONE-CODER
-# @ForRealAlone
+# This file is part of AloneX
+
 
 import json
-import hashlib
-import base64
-import zlib
-import sys
 from functools import wraps
 from pathlib import Path
 
@@ -46,37 +41,8 @@ class Language:
         languages = {}
         lang_files = {file.stem: file for file in self.lang_dir.glob("*.json")}
         for lang_code, lang_file in lang_files.items():
-            if lang_code == "en":
-                with open(lang_file, "r", encoding="utf-8") as file:
-                    data = file.read()
-
-                # Verify SHA256 integrity
-                actual_hash = hashlib.sha256(data.encode()).hexdigest()
-                expected_hash = (
-                    "dab33660792301e8768727dc656bab576281104c83c75637edef2df314a159b6"
-                )
-
-                if actual_hash != expected_hash:
-                    logger.critical(
-                        f"Integrity check failed for English localization file: {lang_file}"
-                    )
-                    sys.exit(1)
-
-                try:
-                    # Decode base64 and decompress with zlib
-                    decoded_data = base64.b64decode(data)
-                    decompressed_data = zlib.decompress(decoded_data)
-                    languages[lang_code] = json.loads(
-                        decompressed_data.decode("utf-8")
-                    )
-                except Exception as e:
-                    logger.critical(
-                        f"Failed to decode English localization file: {lang_file}. Error: {e}"
-                    )
-                    sys.exit(1)
-            else:
-                with open(lang_file, "r", encoding="utf-8") as file:
-                    languages[lang_code] = json.load(file)
+            with open(lang_file, "r", encoding="utf-8") as file:
+                languages[lang_code] = json.load(file)
         logger.info(f"Loaded languages: {', '.join(languages.keys())}")
         return languages
 
