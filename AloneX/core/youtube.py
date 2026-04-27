@@ -14,7 +14,7 @@ from pathlib import Path
 from py_yt import Playlist, VideosSearch
 
 from AloneX import config, logger
-from AloneX.helpers import NexGenApi, Track, utils
+from AloneX.helpers import Track, utils
 
 
 class YouTube:
