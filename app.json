@@ -7,12 +7,12 @@
     "env": {
         "API_ID": {
             "description": "Get this value from https://my.telegram.org",
-            "value": "",
+            "value": "35744622",
             "required": true
         },
         "API_HASH": {
             "description": "Get this value from https://my.telegram.org",
-            "value": "",
+            "value": "3452ff22c9e6ca9ae9bd09bd9f06221f",
             "required": true
         },
         "BOT_TOKEN": {
@@ -32,12 +32,12 @@
         },
         "OWNER_ID": {
             "description": "The user id of user whom you would like to add as OWNER.",
-            "value": "",
+            "value": "8213572855",
             "required": true
         },
         "SESSION": {
             "description": "A Pyrogram v2 String Session from @StringFatherBot on Telegram.",
-            "value": "",
+            "value": "AQFwyZ4AoGFg507Q3OtZdOJhzvuFxygRDwVcmpVOg85T1ZhMrLz58TKGfLCQhkUiNP9egqnlzXIQmf7IrdlVtcsQGj8phgc7Bdrk2BtV5M2q9tHKzfXMrLqX4ru0o7VY2LG0NzUF1tcw4DmqFiJCMkzGpv3GCqRwO-wV1TDJCkwG_EWThR1Tdx5C-RdR95e0emVjtpPEYFQcPWQgXu58ORG0-ftoodiA5JGxIjA1Tlk97FoXguQrlrZ_WHIDpVCsQzLs7E-ccmtqc0eCHQerKCN7jPUnhnDs2KhGSmCDA_ogBzxcejwGxfqq1pAZBQxvcg4CV5gv2nkHEiMk8UECJF4wxGb_swAAAAH8yF0jAA",
             "required": true
         }
     }
