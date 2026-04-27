@@ -24,7 +24,7 @@ class YouTube:
         self.base = "https://www.youtube.com/watch?v="
         self.cookies = []
         self.checked = False
-        self.cookie_dir = "anony/cookies"
+        self.cookie_dir = "AloneX/cookies"
         self.warned = False
 
         if NexGenApi and config.API_URL and config.VIDEO_API_URL and config.API_KEY:
