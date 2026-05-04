@@ -1,121 +1,446 @@
-import os
-import random
+import re
 import asyncio
+import time
+import aiohttp
 import yt_dlp
-from pathlib import Path
 
-from py_yt import VideosSearch
+from urllib.parse import quote
 
-from AloneX import config, logger
-from AloneX.helpers import Track, utils
-
-# Safe import
-try:
-    from AloneX.helpers.NexGenApi import NexGenApi
-except ImportError:
-    NexGenApi = None
+from ShonaX.helpers import Track, utils
 
 
 class YouTube:
     def __init__(self):
-        self.api = None
+
+        # =========================
+        # 🌐 API CONFIG
+        # =========================
+
+        self.API_URL = "https://pvtz.nexgenbots.xyz"
+
+        self.VIDEO_API_URL = "https://api.video.nexgenbots.xyz"
+
+        # 🔑 CHANGE ONLY THIS KEY AFTER 30 DAYS
+        self.API_KEY = "30DxNexGenBotsb9296b"
+
+        # =========================
+        # BASE
+        # =========================
         self.base = "https://www.youtube.com/watch?v="
-        self.cookies = []
-        self.checked = False
-        self.cookie_dir = "AloneX/cookies"
-        self.warned = False
 
-        # NexGen API init
-        if NexGenApi and config.API_URL and config.VIDEO_API_URL and config.API_KEY:
-            try:
-                self.api = NexGenApi(
-                    config.API_URL,
-                    config.VIDEO_API_URL,
-                    config.API_KEY
-                )
-                logger.info("Using NexGenApi for downloads")
-            except Exception as e:
-                logger.warning(f"NexGenApi init failed: {e}")
-                self.api = None
-
-    def get_cookies(self):
-        if not self.checked:
-            if os.path.exists(self.cookie_dir):
-                for file in os.listdir(self.cookie_dir):
-                    if file.endswith(".txt"):
-                        self.cookies.append(f"{self.cookie_dir}/{file}")
-            self.checked = True
-
-        if not self.cookies:
-            if not self.warned:
-                self.warned = True
-                logger.warning("Cookies missing, downloads may fail")
-            return None
-
-        return random.choice(self.cookies)
-
-    async def search(self, query: str, m_id: int, video: bool = False):
-        try:
-            search = VideosSearch(query, limit=1)
-            results = await search.next()
-        except Exception as e:
-            logger.error(f"Search failed: {e}")
-            return None
-
-        if not results or not results.get("result"):
-            return None
-
-        data = results["result"][0]
-
-        thumbnail = None
-        if data.get("thumbnails"):
-            try:
-                thumbnail = data["thumbnails"][0].get("url")
-            except Exception:
-                thumbnail = None
-
-        return Track(
-            id=data.get("id"),
-            title=data.get("title"),
-            duration=data.get("duration"),
-            duration_sec=utils.to_seconds(data.get("duration")),
-            url=data.get("link"),
-            thumbnail=thumbnail,
-            video=video,
-            message_id=m_id,
-            channel_name=data.get("channel") or data.get("channelName") or "Unknown"
+        self.regex = re.compile(
+            r"(https?://)?(www\.|m\.|music\.)?"
+            r"(youtube\.com|youtu\.be)/"
         )
 
-    async def download(self, video_id: str, video: bool = False):
-        if self.api:
-            try:
-                file_path = await self.api.download(video_id, video)
-                if file_path:
-                    return file_path
-            except Exception as e:
-                logger.warning(f"NexGenApi failed: {e}")
+        # =========================
+        # CACHE
+        # =========================
+        self.cache = {}
+        self.cache_ttl = 3600
 
-        url = self.base + video_id
-        ext = "mp4" if video else "webm"
-        filename = f"downloads/{video_id}.{ext}"
+        # =========================
+        # SESSION
+        # =========================
+        self.session = None
 
-        if Path(filename).exists():
-            return filename
+    # =========================
+    # SESSION
+    # =========================
+    async def get_session(self):
+        if not self.session or self.session.closed:
 
-        ydl_opts = {
-            "outtmpl": "downloads/%(id)s.%(ext)s",
-            "quiet": True,
-            "format": "bestaudio/best",
-            "cookiefile": self.get_cookies(),
-        }
+            timeout = aiohttp.ClientTimeout(total=20)
 
-        def _download():
-            try:
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    ydl.download([url])
-                return filename
-            except Exception as e:
-                logger.error(f"yt-dlp download failed: {e}")
+            self.session = aiohttp.ClientSession(
+                timeout=timeout
+            )
+
+        return self.session
+
+    async def close(self):
+        if self.session and not self.session.closed:
+            await self.session.close()
+
+    # =========================
+    # URL CHECK
+    # =========================
+    def is_url(self, text: str):
+        return bool(re.match(self.regex, text))
+
+    # =========================
+    # CACHE
+    # =========================
+    def get_cache(self, query):
+
+        data = self.cache.get(query)
+
+        if not data:
+            return None
+
+        result, expiry = data
+
+        if time.time() > expiry:
+            del self.cache[query]
+            return None
+
+        return result
+
+    def set_cache(self, query, result):
+
+        self.cache[query] = (
+            result,
+            time.time() + self.cache_ttl
+        )
+
+    # =========================
+    # API SEARCH
+    # =========================
+    async def api_search(self, query: str):
+
+        try:
+            session = await self.get_session()
+
+            query = quote(query)
+
+            url = (
+                f"{self.API_URL}/search"
+                f"?query={query}"
+                f"&api_key={self.API_KEY}"
+            )
+
+            async with session.get(url) as resp:
+
+                if resp.status != 200:
+                    print("SEARCH API STATUS:", resp.status)
+                    return None
+
+                data = await resp.json()
+
+            result = None
+
+            if isinstance(data, list) and data:
+                result = data[0]
+
+            elif isinstance(data, dict):
+
+                if data.get("result"):
+                    result = data["result"][0]
+
+                elif data.get("results"):
+                    result = data["results"][0]
+
+                else:
+                    result = data
+
+            if not result:
                 return None
 
-        return await asyncio.to_thread(_download)
+            video_id = (
+                result.get("id")
+                or result.get("videoId")
+                or result.get("video_id")
+            )
+
+            if not video_id:
+                return None
+
+            return {
+                "id": video_id,
+                "title": result.get(
+                    "title",
+                    "Unknown"
+                ),
+                "channel": (
+                    result.get("channel")
+                    or result.get("channelTitle")
+                    or result.get("uploader")
+                    or "Unknown"
+                ),
+                "thumbnail": (
+                    result.get("thumbnail")
+                    or result.get("thumb")
+                    or ""
+                ),
+                "duration": result.get(
+                    "duration",
+                    "Unknown"
+                ),
+                "duration_sec": int(
+                    result.get("duration_sec", 0)
+                ),
+                "views": str(
+                    result.get("views")
+                    or result.get("view_count")
+                    or ""
+                ),
+            }
+
+        except Exception as e:
+            print("API SEARCH ERROR:", e)
+            return None
+
+    # =========================
+    # YTDLP FALLBACK
+    # =========================
+    async def ytdlp_search(self, query: str):
+
+        def extract():
+
+            try:
+                opts = {
+                    "quiet": True,
+                    "no_warnings": True,
+                }
+
+                with yt_dlp.YoutubeDL(opts) as ydl:
+
+                    data = ydl.extract_info(
+                        f"ytsearch1:{query}",
+                        download=False
+                    )
+
+                if not data:
+                    return None
+
+                entries = data.get("entries")
+
+                if not entries:
+                    return None
+
+                return entries[0]
+
+            except Exception as e:
+                print("YTDLP SEARCH ERROR:", e)
+                return None
+
+        info = await asyncio.to_thread(extract)
+
+        if not info:
+            return None
+
+        return {
+            "id": info.get("id"),
+            "title": info.get("title"),
+            "channel": info.get(
+                "uploader",
+                "Unknown"
+            ),
+            "thumbnail": info.get(
+                "thumbnail",
+                ""
+            ),
+            "duration": utils.format_duration(
+                info.get("duration", 0)
+            ),
+            "duration_sec": info.get(
+                "duration",
+                0
+            ),
+            "views": str(
+                info.get("view_count", "")
+            ),
+        }
+
+    # =========================
+    # SEARCH
+    # =========================
+    async def search(
+        self,
+        query: str,
+        m_id: int,
+        video: bool = False
+    ):
+
+        try:
+            cached = self.get_cache(query)
+
+            if cached:
+                return cached
+
+            # =========================
+            # URL SEARCH
+            # =========================
+            if self.is_url(query):
+
+                return await self.get_track_from_url(
+                    query,
+                    m_id,
+                    video
+                )
+
+            # =========================
+            # API SEARCH
+            # =========================
+            data = await self.api_search(query)
+
+            # =========================
+            # FALLBACK
+            # =========================
+            if not data:
+                data = await self.ytdlp_search(query)
+
+            if not data:
+                return None
+
+            track = Track(
+                id=data["id"],
+                channel_name=data["channel"],
+                duration=data["duration"],
+                duration_sec=data["duration_sec"],
+                message_id=m_id,
+                title=(data["title"] or "")[:60],
+                thumbnail=data["thumbnail"],
+                url=self.base + data["id"],
+                view_count=data["views"],
+                video=video,
+            )
+
+            self.set_cache(query, track)
+
+            return track
+
+        except Exception as e:
+            print("SEARCH ERROR:", e)
+            return None
+
+    # =========================
+    # URL TRACK
+    # =========================
+    async def get_track_from_url(
+        self,
+        url: str,
+        m_id: int,
+        video: bool = False
+    ):
+
+        def extract():
+
+            try:
+                with yt_dlp.YoutubeDL(
+                    self.ydl_opts()
+                ) as ydl:
+
+                    return ydl.extract_info(
+                        url,
+                        download=False
+                    )
+
+            except Exception as e:
+                print("URL ERROR:", e)
+                return None
+
+        info = await asyncio.to_thread(extract)
+
+        if not info:
+            return None
+
+        duration = info.get("duration", 0)
+
+        return Track(
+            id=info.get("id"),
+            channel_name=info.get(
+                "uploader",
+                "Unknown"
+            ),
+            duration=utils.format_duration(duration),
+            duration_sec=duration,
+            message_id=m_id,
+            title=(info.get("title") or "")[:60],
+            thumbnail=info.get("thumbnail", ""),
+            url=url,
+            view_count=str(
+                info.get("view_count", "")
+            ),
+            video=video,
+        )
+
+    # =========================
+    # YTDLP OPTIONS
+    # =========================
+    def ydl_opts(self):
+
+        return {
+            "quiet": True,
+            "no_warnings": True,
+            "geo_bypass": True,
+            "nocheckcertificate": True,
+            "ignoreerrors": True,
+            "retries": 10,
+            "format": "bestaudio/best",
+        }
+
+    # =========================
+    # STREAM
+    # =========================
+    async def stream(self, url_or_id: str):
+
+        try:
+            session = await self.get_session()
+
+            video_id = (
+                url_or_id.split("v=")[-1]
+                if self.is_url(url_or_id)
+                else url_or_id
+            )
+
+            api_url = (
+                f"{self.VIDEO_API_URL}/stream"
+                f"?id={video_id}"
+                f"&api_key={self.API_KEY}"
+            )
+
+            async with session.get(api_url) as resp:
+
+                if resp.status == 200:
+
+                    data = await resp.json()
+
+                    stream_url = (
+                        data.get("url")
+                        or data.get("stream")
+                    )
+
+                    if stream_url:
+                        return stream_url
+
+            # =========================
+            # FALLBACK YTDLP
+            # =========================
+            url = (
+                url_or_id
+                if self.is_url(url_or_id)
+                else self.base + url_or_id
+            )
+
+            def extract():
+
+                try:
+                    with yt_dlp.YoutubeDL(
+                        self.ydl_opts()
+                    ) as ydl:
+
+                        info = ydl.extract_info(
+                            url,
+                            download=False
+                        )
+
+                        if info.get("url"):
+                            return info["url"]
+
+                        for fmt in reversed(
+                            info.get("formats", [])
+                        ):
+
+                            if fmt.get("acodec") != "none":
+                                return fmt["url"]
+
+                except Exception as e:
+                    print("STREAM ERROR:", e)
+                    return None
+
+            return await asyncio.to_thread(extract)
+
+        except Exception as e:
+            print("FINAL STREAM ERROR:", e)
+            return None
