@@ -539,8 +539,9 @@ class YouTubeAPI:
         return (
             formats_available,
             link
-)
-        async def secure_download(
+        )
+
+    async def secure_download(
         self,
         url,
         filepath,
@@ -738,4 +739,11 @@ class YouTubeAPI:
             return (
                 None,
                 False
-                    )
+            )
+
+
+# =========================================
+# FINAL OBJECT
+# =========================================
+
+YouTube = YouTubeAPI
