@@ -1,4 +1,5 @@
 #ALONE-CODER
+
 aiohttp~=3.13.3
 kurigram>=2.2.17
 pillow~=12.1.0
@@ -10,3 +11,6 @@ py-yt-search~=0.5.7
 python-dotenv~=1.2.1
 yt-dlp[default]>=2026.3.13
 static-ffmpeg
+
+requests
+urllib3
