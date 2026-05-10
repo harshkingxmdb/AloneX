@@ -136,5 +136,5 @@ class Config:
 
         if missing:
             raise SystemExit(
-                f"Missing required environment variables: {', '.join(missing)}"
+    f"Missing required environment variables: {', '.join(missing)}"
     )
