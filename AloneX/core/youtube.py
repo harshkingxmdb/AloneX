@@ -26,8 +26,8 @@ from urllib3.util.retry import Retry
 
 from py_yt import VideosSearch
 
-from IstkharMusic import LOGGER
-from IstkharMusic.utils.formatters import time_to_seconds
+from AloneX import LOGGER
+from AloneX.utils.formatters import time_to_seconds
 
 # =========================================
 # CONFIG IMPORT
