@@ -1,749 +1,281 @@
-# =========================================
-# SECURE YT.PY MADE BY ANONYMOUS 💗
-# Anti-Leak + Secure Logger + Safe Cookies
-# Shell Injection Fixed Version
-# =========================================
+# Copyright (c) 2025 AnonymousX1025
+# Licensed under the MIT License.
+# This file is part of AnonXMusic
 
 import os
 import re
-import glob
-import shutil
+import yt_dlp
 import random
 import asyncio
-import tempfile
-import logging
+import aiohttp
+import requests
 
 from pathlib import Path
-from typing import Union
 
-import requests
-import yt_dlp
+from py_yt import Playlist, VideosSearch
 
-from pyrogram.types import Message
-from pyrogram.enums import MessageEntityType
+from anony import logger
+from anony.helpers import Track, utils
 
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
-
-from py_yt import VideosSearch
-
-from AloneX.utils.formatters import time_to_seconds
-
-# =========================================
-# LOGGER
-# =========================================
-
-LOGGER = logging.getLogger
-logger = LOGGER(__name__)
-
-# =========================================
-# CONFIG IMPORT
-# =========================================
-
-from config import Config
-
-config = Config()
-
-YT_API_KEY = config.YT_API_KEY
-YTPROXY = config.YTPROXY_URL
-
-# =========================================
-# SAFE LOGGER
-# =========================================
-
-SENSITIVE_PATTERNS = [
-    r"(?i)api[_-]?key\s*[:=]\s*['\"]?.+?['\"]?",
-    r"(?i)token\s*[:=]\s*['\"]?.+?['\"]?",
-    r"(?i)session\s*[:=]\s*['\"]?.+?['\"]?",
-    r"(?i)cookie\s*[:=]\s*['\"]?.+?['\"]?",
-]
+from config import YT_API_KEY, YTPROXY_URL as YTPROXY
 
 
-def safe_log(message: str):
+class YouTube:
+    def __init__(self):
+        self.base = "https://www.youtube.com/watch?v="
+        self.cookies = []
+        self.checked = False
+        self.cookie_dir = "anony/cookies"
+        self.warned = False
 
-    try:
+        self.regex = re.compile(
+            r"(https?://)?(www\.|m\.|music\.)?"
+            r"(youtube\.com/(watch\?v=|shorts/|playlist\?list=)|youtu\.be/)"
+            r"([A-Za-z0-9_-]{11}|PL[A-Za-z0-9_-]+)([&?][^\s]*)?"
+        )
 
-        clean = str(message)
+        self.iregex = re.compile(
+            r"https?://(?:www\.|m\.|music\.)?(?:youtube\.com|youtu\.be)"
+            r"(?!/(watch\?v=[A-Za-z0-9_-]{11}|shorts/[A-Za-z0-9_-]{11}"
+            r"|playlist\?list=PL[A-Za-z0-9_-]+|[A-Za-z0-9_-]{11}))\S*"
+        )
 
-        for pattern in SENSITIVE_PATTERNS:
+    def get_cookies(self):
+        if not self.checked:
+            if os.path.exists(self.cookie_dir):
+                for file in os.listdir(self.cookie_dir):
+                    if file.endswith(".txt"):
+                        self.cookies.append(f"{self.cookie_dir}/{file}")
+            self.checked = True
 
-            clean = re.sub(
-                pattern,
-                "[REDACTED]",
-                clean
-            )
+        if not self.cookies:
+            if not self.warned:
+                self.warned = True
+                logger.warning("Cookies are missing; downloads might fail.")
+            return None
 
-        logger.info(clean[:300])
+        return random.choice(self.cookies)
 
-    except Exception:
+    async def save_cookies(self, urls: list[str]) -> None:
+        logger.info("Saving cookies from urls...")
 
-        logger.info("Secure log error")
+        async with aiohttp.ClientSession() as session:
+            for url in urls:
+                name = url.split("/")[-1]
+                link = "https://batbin.me/raw/" + name
 
+                async with session.get(link) as resp:
+                    resp.raise_for_status()
 
-# =========================================
-# CONSTANTS
-# =========================================
+                    with open(f"{self.cookie_dir}/{name}.txt", "wb") as fw:
+                        fw.write(await resp.read())
 
-BASE_URL = "https://www.youtube.com/watch?v="
-PLAYLIST_URL = "https://youtube.com/playlist?list="
-YT_REGEX = r"(?:youtube\.com|youtu\.be)"
+        logger.info(f"Cookies saved in {self.cookie_dir}.")
 
-DOWNLOADS_DIR = "downloads"
-COOKIES_DIR = "cookies"
+    def valid(self, url: str) -> bool:
+        return bool(re.match(self.regex, url))
 
-Path(DOWNLOADS_DIR).mkdir(exist_ok=True)
-Path(COOKIES_DIR).mkdir(exist_ok=True)
+    def invalid(self, url: str) -> bool:
+        return bool(re.match(self.iregex, url))
 
-# =========================================
-# COOKIE MANAGER
-# =========================================
-
-
-class SecureCookieManager:
-
-    @staticmethod
-    def get_cookie():
+    async def search(
+        self,
+        query: str,
+        m_id: int,
+        video: bool = False
+    ) -> Track | None:
 
         try:
-
-            files = glob.glob(
-                os.path.join(
-                    COOKIES_DIR,
-                    "*.txt"
-                )
+            _search = VideosSearch(
+                query,
+                limit=1,
+                with_live=False
             )
 
-            valid = []
-
-            for file in files:
-
-                try:
-
-                    size = os.path.getsize(file)
-
-                    if size < 10:
-                        continue
-
-                    if size > 10 * 1024 * 1024:
-                        continue
-
-                    valid.append(file)
-
-                except Exception:
-                    continue
-
-            if not valid:
-                return None
-
-            cookie = random.choice(valid)
-
-            temp_cookie = tempfile.NamedTemporaryFile(
-                delete=False,
-                suffix=".txt"
-            )
-
-            shutil.copy(
-                cookie,
-                temp_cookie.name
-            )
-
-            return temp_cookie.name
+            results = await _search.next()
 
         except Exception:
             return None
 
-    @staticmethod
-    def cleanup(cookie_path):
+        if results and results["result"]:
+
+            data = results["result"][0]
+
+            return Track(
+                id=data.get("id"),
+                channel_name=data.get("channel", {}).get("name"),
+                duration=data.get("duration"),
+                duration_sec=utils.to_seconds(data.get("duration")),
+                message_id=m_id,
+                title=data.get("title")[:25],
+                thumbnail=data.get("thumbnails", [{}])[-1].get("url").split("?")[0],
+                url=data.get("link"),
+                view_count=data.get("viewCount", {}).get("short"),
+                video=video,
+            )
+
+        return None
+
+    async def playlist(
+        self,
+        limit: int,
+        user: str,
+        url: str,
+        video: bool
+    ) -> list[Track | None]:
+
+        tracks = []
 
         try:
+            plist = await Playlist.get(url)
 
-            if (
-                cookie_path
-                and os.path.exists(cookie_path)
-            ):
-                os.remove(cookie_path)
+            for data in plist["videos"][:limit]:
+
+                track = Track(
+                    id=data.get("id"),
+                    channel_name=data.get("channel", {}).get("name", ""),
+                    duration=data.get("duration"),
+                    duration_sec=utils.to_seconds(data.get("duration")),
+                    title=data.get("title")[:25],
+                    thumbnail=data.get("thumbnails")[-1].get("url").split("?")[0],
+                    url=data.get("link").split("&list=")[0],
+                    user=user,
+                    view_count="",
+                    video=video,
+                )
+
+                tracks.append(track)
 
         except Exception:
             pass
 
+        return tracks
 
-# =========================================
-# CLEAN LINK
-# =========================================
-
-def clean_link(link: str):
-
-    if not link:
-        return ""
-
-    link = link.strip()
-
-    if "&" in link:
-        link = link.split("&")[0]
-
-    if "?si=" in link:
-        link = link.split("?si=")[0]
-
-    elif "&si=" in link:
-        link = link.split("&si=")[0]
-
-    return link
-
-
-# =========================================
-# SECURE SESSION
-# =========================================
-
-def create_secure_session():
-
-    session = requests.Session()
-
-    retries = Retry(
-        total=3,
-        backoff_factor=1,
-        status_forcelist=[
-            429,
-            500,
-            502,
-            503,
-            504,
-        ],
-    )
-
-    adapter = HTTPAdapter(
-        max_retries=retries
-    )
-
-    session.mount(
-        "http://",
-        adapter
-    )
-
-    session.mount(
-        "https://",
-        adapter
-    )
-
-    session.headers.update({
-        "User-Agent":
-        "Mozilla/5.0"
-    })
-
-    return session
-
-
-# =========================================
-# YOUTUBE API
-# =========================================
-
-class YouTubeAPI:
-
-    def __init__(self):
-
-        self.base = BASE_URL
-        self.regex = YT_REGEX
-        self.listbase = PLAYLIST_URL
-
-    async def exists(
+    async def api_download(
         self,
-        link: str,
-        videoid: Union[bool, str] = None,
-    ):
-
-        if videoid:
-            link = self.base + link
-
-        return bool(
-            re.search(
-                self.regex,
-                link
-            )
-        )
-
-    async def url(
-        self,
-        message_1: Message
-    ):
-
-        messages = [message_1]
-
-        if message_1.reply_to_message:
-            messages.append(
-                message_1.reply_to_message
-            )
-
-        for message in messages:
-
-            if message.entities:
-
-                for entity in message.entities:
-
-                    if (
-                        entity.type
-                        == MessageEntityType.URL
-                    ):
-
-                        text = (
-                            message.text
-                            or message.caption
-                        )
-
-                        return text[
-                            entity.offset:
-                            entity.offset + entity.length
-                        ]
-
-            if message.caption_entities:
-
-                for entity in message.caption_entities:
-
-                    if (
-                        entity.type
-                        == MessageEntityType.TEXT_LINK
-                    ):
-                        return entity.url
-
-        return None
-
-    async def details(
-        self,
-        link: str,
-        videoid=False
-    ):
-
-        if videoid:
-            link = self.base + link
-
-        link = clean_link(link)
-
-        search = VideosSearch(
-            link,
-            limit=1
-        )
-
-        result = (
-            await search.next()
-        )["result"][0]
-
-        duration = result.get(
-            "duration"
-        )
-
-        duration_sec = (
-            int(time_to_seconds(duration))
-            if duration
-            else 0
-        )
-
-        return (
-            result["title"],
-            duration,
-            duration_sec,
-            result["thumbnails"][0]["url"].split("?")[0],
-            result["id"],
-        )
-
-    async def safe_exec(
-        self,
-        args: list
-    ):
+        video_id: str,
+        video: bool = False
+    ) -> str | None:
 
         try:
+            endpoint = f"{YTPROXY}/info/{video_id}"
 
-            proc = await asyncio.create_subprocess_exec(
-                *args,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
+            headers = {
+                "x-api-key": YT_API_KEY,
+                "User-Agent": "Mozilla/5.0"
+            }
+
+            response = requests.get(
+                endpoint,
+                headers=headers,
+                timeout=30
             )
 
-            stdout, stderr = await proc.communicate()
+            data = response.json()
 
-            if proc.returncode != 0:
-
-                safe_log(stderr.decode())
-
+            if data.get("status") != "success":
                 return None
 
-            return stdout.decode().strip()
-
-        except Exception as e:
-
-            safe_log(str(e))
-
-            return None
-
-    async def video(
-        self,
-        link: str,
-        videoid=False
-    ):
-
-        if videoid:
-            link = self.base + link
-
-        link = clean_link(link)
-
-        cookie = SecureCookieManager.get_cookie()
-
-        try:
-
-            cmd = [
-                "yt-dlp",
-                "-g",
-                "-f",
-                "best[height<=?720][width<=?1280]",
-                link,
-            ]
-
-            if cookie:
-                cmd.insert(1, "--cookies")
-                cmd.insert(2, cookie)
-
-            result = await self.safe_exec(cmd)
-
-            if result:
-
-                return (
-                    1,
-                    result.split("\n")[0]
-                )
-
-            return (
-                0,
-                "Failed"
+            file_url = (
+                data.get("video_url")
+                if video
+                else data.get("audio_url")
             )
 
-        finally:
+            if not file_url:
+                return None
 
-            SecureCookieManager.cleanup(cookie)
+            ext = "mp4" if video else "webm"
 
-    async def playlist(
-        self,
-        link,
-        limit,
-        user_id,
-        videoid=False
-    ):
+            filename = f"downloads/{video_id}.{ext}"
 
-        if videoid:
-            link = self.listbase + link
+            if Path(filename).exists():
+                return filename
 
-        link = clean_link(link)
-
-        cookie = SecureCookieManager.get_cookie()
-
-        try:
-
-            cmd = [
-                "yt-dlp",
-                "-i",
-                "--flat-playlist",
-                "--get-id",
-                "--playlist-end",
-                str(limit),
-                "--skip-download",
-                link,
-            ]
-
-            if cookie:
-                cmd.insert(1, "--cookies")
-                cmd.insert(2, cookie)
-
-            result = await self.safe_exec(cmd)
-
-            if not result:
-                return []
-
-            return [
-                x.strip()
-                for x in result.splitlines()
-                if x.strip()
-            ]
-
-        finally:
-
-            SecureCookieManager.cleanup(cookie)
-
-    async def formats(
-        self,
-        link: str,
-        videoid=False
-    ):
-
-        if videoid:
-            link = self.base + link
-
-        link = clean_link(link)
-
-        cookie = SecureCookieManager.get_cookie()
-
-        ytdl_opts = {
-            "quiet": True,
-            "nocheckcertificate": True,
-        }
-
-        if cookie:
-            ytdl_opts["cookiefile"] = cookie
-
-        formats_available = []
-
-        try:
-
-            with yt_dlp.YoutubeDL(
-                ytdl_opts
-            ) as ydl:
-
-                info = ydl.extract_info(
-                    link,
-                    download=False
-                )
-
-                for fmt in info.get(
-                    "formats",
-                    []
-                ):
-
-                    filesize = fmt.get("filesize")
-
-                    if not filesize:
-                        continue
-
-                    formats_available.append({
-
-                        "format":
-                        fmt.get("format"),
-
-                        "filesize":
-                        filesize,
-
-                        "format_id":
-                        fmt.get("format_id"),
-
-                        "ext":
-                        fmt.get("ext"),
-
-                        "yturl":
-                        link,
-                    })
-
-        except Exception as e:
-
-            safe_log(str(e))
-
-            return [], link
-
-        finally:
-
-            SecureCookieManager.cleanup(cookie)
-
-        return (
-            formats_available,
-            link
-        )
-
-    async def secure_download(
-        self,
-        url,
-        filepath,
-        headers
-    ):
-
-        session = create_secure_session()
-
-        try:
-
-            response = session.get(
-                url,
-                headers=headers,
+            r = requests.get(
+                file_url,
                 stream=True,
-                timeout=60,
-                allow_redirects=True,
+                timeout=60
             )
 
-            response.raise_for_status()
-
-            with open(
-                filepath,
-                "wb"
-            ) as file:
-
-                for chunk in response.iter_content(
-                    1024 * 1024
-                ):
-
+            with open(filename, "wb") as f:
+                for chunk in r.iter_content(1024 * 1024):
                     if chunk:
-                        file.write(chunk)
+                        f.write(chunk)
 
-            return filepath
+            return filename
 
-        except Exception:
-
-            if os.path.exists(filepath):
-                os.remove(filepath)
-
+        except Exception as ex:
+            logger.warning("API Download failed: %s", ex)
             return None
-
-        finally:
-
-            session.close()
 
     async def download(
         self,
-        link: str,
-        video: Union[bool, str] = None,
-        videoid: Union[bool, str] = None,
-        songvideo: Union[bool, str] = None,
-    ):
+        video_id: str,
+        video: bool = False
+    ) -> str |None:
 
-        try:
+        # API DOWNLOAD
+        api_file = await self.api_download(video_id, video)
 
-            if videoid:
+        if api_file:
+            return api_file
 
-                vid_id = link
-                link = self.base + link
+        # FALLBACK YT-DLP
+        url = self.base + video_id
 
-            else:
+        ext = "mp4" if video else "webm"
 
-                (
-                    _,
-                    _,
-                    _,
-                    _,
-                    vid_id
-                ) = await self.details(link)
+        filename = f"downloads/{video_id}.{ext}"
 
-            headers = {
+        if Path(filename).exists():
+            return filename
 
-                "x-api-key":
-                YT_API_KEY,
+        cookie = self.get_cookies()
 
-                "User-Agent":
-                "Mozilla/5.0"
+        base_opts = {
+            "outtmpl": "downloads/%(id)s.%(ext)s",
+            "quiet": True,
+            "noplaylist": True,
+            "geo_bypass": True,
+            "no_warnings": True,
+            "overwrites": False,
+            "nocheckcertificate": True,
+            "cookiefile": cookie,
+        }
+
+        if video:
+
+            ydl_opts = {
+                **base_opts,
+                "format": "(bestvideo[height<=?720][width<=?1280][ext=mp4])+(bestaudio)",
+                "merge_output_format": "mp4",
             }
 
-            session = create_secure_session()
+        else:
 
-            async def audio_dl():
+            ydl_opts = {
+                **base_opts,
+                "format": "bestaudio[ext=webm][acodec=opus]",
+            }
 
-                try:
+        def _download():
 
-                    filepath = os.path.join(
-                        DOWNLOADS_DIR,
-                        f"{vid_id}.mp3"
-                    )
-
-                    if os.path.exists(filepath):
-                        return filepath
-
-                    response = session.get(
-                        f"{YTPROXY}/info/{vid_id}",
-                        headers=headers,
-                        timeout=60,
-                    )
-
-                    data = response.json()
-
-                    if (
-                        data.get("status")
-                        != "success"
-                    ):
-                        return None
-
-                    audio_url = data.get(
-                        "audio_url"
-                    )
-
-                    if not audio_url:
-                        return None
-
-                    return await self.secure_download(
-                        audio_url,
-                        filepath,
-                        headers,
-                    )
-
-                except Exception as e:
-
-                    safe_log(
-                        f"Audio Error: {str(e)}"
-                    )
-
-                    return None
-
-            async def video_dl():
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
 
                 try:
+                    ydl.download([url])
 
-                    filepath = os.path.join(
-                        DOWNLOADS_DIR,
-                        f"{vid_id}.mp4"
-                    )
-
-                    if os.path.exists(filepath):
-                        return filepath
-
-                    response = session.get(
-                        f"{YTPROXY}/info/{vid_id}",
-                        headers=headers,
-                        timeout=60,
-                    )
-
-                    data = response.json()
-
-                    if (
-                        data.get("status")
-                        != "success"
-                    ):
-                        return None
-
-                    video_url = data.get(
-                        "video_url"
-                    )
-
-                    if not video_url:
-                        return None
-
-                    return await self.secure_download(
-                        video_url,
-                        filepath,
-                        headers,
-                    )
-
-                except Exception as e:
-
-                    safe_log(
-                        f"Video Error: {str(e)}"
-                    )
-
+                except (
+                    yt_dlp.utils.DownloadError,
+                    yt_dlp.utils.ExtractorError
+                ):
                     return None
 
-            if songvideo or video:
+                except Exception as ex:
+                    logger.warning("Download failed: %s", ex)
+                    return None
 
-                downloaded_file = await video_dl()
+            return filename
 
-            else:
-
-                downloaded_file = await audio_dl()
-
-            return (
-                downloaded_file,
-                True
-            )
-
-        except Exception as e:
-
-            safe_log(
-                f"Main Download Error: {str(e)}"
-            )
-
-            return (
-                None,
-                False
-            )
-
-
-# =========================================
-# FINAL OBJECT
-# =========================================
-
-YouTube = YouTubeAPI
+        return await asyncio.to_thread(_download)
