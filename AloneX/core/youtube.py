@@ -540,3 +540,202 @@ class YouTubeAPI:
             formats_available,
             link
 )
+        async def secure_download(
+        self,
+        url,
+        filepath,
+        headers
+    ):
+
+        session = create_secure_session()
+
+        try:
+
+            response = session.get(
+                url,
+                headers=headers,
+                stream=True,
+                timeout=60,
+                allow_redirects=True,
+            )
+
+            response.raise_for_status()
+
+            with open(
+                filepath,
+                "wb"
+            ) as file:
+
+                for chunk in response.iter_content(
+                    1024 * 1024
+                ):
+
+                    if chunk:
+                        file.write(chunk)
+
+            return filepath
+
+        except Exception:
+
+            if os.path.exists(filepath):
+                os.remove(filepath)
+
+            return None
+
+        finally:
+
+            session.close()
+
+    async def download(
+        self,
+        link: str,
+        video: Union[bool, str] = None,
+        videoid: Union[bool, str] = None,
+        songvideo: Union[bool, str] = None,
+    ):
+
+        try:
+
+            if videoid:
+
+                vid_id = link
+                link = self.base + link
+
+            else:
+
+                (
+                    _,
+                    _,
+                    _,
+                    _,
+                    vid_id
+                ) = await self.details(link)
+
+            headers = {
+
+                "x-api-key":
+                YT_API_KEY,
+
+                "User-Agent":
+                "Mozilla/5.0"
+            }
+
+            session = create_secure_session()
+
+            async def audio_dl():
+
+                try:
+
+                    filepath = os.path.join(
+                        DOWNLOADS_DIR,
+                        f"{vid_id}.mp3"
+                    )
+
+                    if os.path.exists(filepath):
+                        return filepath
+
+                    response = session.get(
+                        f"{YTPROXY}/info/{vid_id}",
+                        headers=headers,
+                        timeout=60,
+                    )
+
+                    data = response.json()
+
+                    if (
+                        data.get("status")
+                        != "success"
+                    ):
+                        return None
+
+                    audio_url = data.get(
+                        "audio_url"
+                    )
+
+                    if not audio_url:
+                        return None
+
+                    return await self.secure_download(
+                        audio_url,
+                        filepath,
+                        headers,
+                    )
+
+                except Exception as e:
+
+                    safe_log(
+                        f"Audio Error: {str(e)}"
+                    )
+
+                    return None
+
+            async def video_dl():
+
+                try:
+
+                    filepath = os.path.join(
+                        DOWNLOADS_DIR,
+                        f"{vid_id}.mp4"
+                    )
+
+                    if os.path.exists(filepath):
+                        return filepath
+
+                    response = session.get(
+                        f"{YTPROXY}/info/{vid_id}",
+                        headers=headers,
+                        timeout=60,
+                    )
+
+                    data = response.json()
+
+                    if (
+                        data.get("status")
+                        != "success"
+                    ):
+                        return None
+
+                    video_url = data.get(
+                        "video_url"
+                    )
+
+                    if not video_url:
+                        return None
+
+                    return await self.secure_download(
+                        video_url,
+                        filepath,
+                        headers,
+                    )
+
+                except Exception as e:
+
+                    safe_log(
+                        f"Video Error: {str(e)}"
+                    )
+
+                    return None
+
+            if songvideo or video:
+
+                downloaded_file = await video_dl()
+
+            else:
+
+                downloaded_file = await audio_dl()
+
+            return (
+                downloaded_file,
+                True
+            )
+
+        except Exception as e:
+
+            safe_log(
+                f"Main Download Error: {str(e)}"
+            )
+
+            return (
+                None,
+                False
+                    )
