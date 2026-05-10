@@ -14,8 +14,8 @@ from pathlib import Path
 
 from py_yt import Playlist, VideosSearch
 
-from anony import logger
-from anony.helpers import Track, utils
+from AloneX import logger
+from AloneX.helpers import Track, utils
 
 from config import YT_API_KEY, YTPROXY_URL as YTPROXY
 
