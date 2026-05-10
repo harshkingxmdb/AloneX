@@ -1,4 +1,5 @@
-#ALONE CODER
+# ALONE CODER
+
 from os import getenv
 from dotenv import load_dotenv
 
@@ -7,7 +8,9 @@ load_dotenv()
 
 class Config:
     def __init__(self):
+
         self.API_ID = int(getenv("API_ID", "17596251"))
+
         self.API_HASH = getenv(
             "API_HASH",
             "e58343b4c0193e293e391daf97603fcd"
@@ -104,7 +107,7 @@ class Config:
             "https://files.catbox.moe/s5orbf.jpg"
         )
 
-        # Vars For API End Point
+        # API End Point
         self.YTPROXY_URL = getenv(
             "YTPROXY_URL",
             "https://tgapi.xbitcode.com"
@@ -116,6 +119,7 @@ class Config:
         )
 
     def check(self):
+
         missing = [
             var
             for var in [
@@ -133,4 +137,4 @@ class Config:
         if missing:
             raise SystemExit(
                 f"Missing required environment variables: {', '.join(missing)}"
-            )
+    )
