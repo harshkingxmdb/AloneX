@@ -5,8 +5,8 @@
 
 from pyrogram import types
 
-from anony import app, config, lang
-from anony.core.lang import lang_codes
+from AloneX import app, config, lang
+from AloneX.core.lang import lang_codes
 
 
 class Inline:
