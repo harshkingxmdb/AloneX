@@ -17,7 +17,13 @@ from py_yt import Playlist, VideosSearch
 from AloneX import logger
 from AloneX.helpers import Track, utils
 
-from config import YT_API_KEY, YTPROXY_URL as YTPROXY
+# CONFIG FIX
+from config import Config
+
+config = Config()
+
+YT_API_KEY = config.YT_API_KEY
+YTPROXY = config.YTPROXY_URL
 
 
 class YouTube:
@@ -42,41 +48,74 @@ class YouTube:
 
     def get_cookies(self):
         if not self.checked:
+
             if os.path.exists(self.cookie_dir):
+
                 for file in os.listdir(self.cookie_dir):
+
                     if file.endswith(".txt"):
-                        self.cookies.append(f"{self.cookie_dir}/{file}")
+
+                        self.cookies.append(
+                            f"{self.cookie_dir}/{file}"
+                        )
+
             self.checked = True
 
         if not self.cookies:
+
             if not self.warned:
+
                 self.warned = True
-                logger.warning("Cookies are missing; downloads might fail.")
+
+                logger.warning(
+                    "Cookies are missing; downloads might fail."
+                )
+
             return None
 
         return random.choice(self.cookies)
 
-    async def save_cookies(self, urls: list[str]) -> None:
+    async def save_cookies(
+        self,
+        urls: list[str]
+    ) -> None:
+
         logger.info("Saving cookies from urls...")
 
         async with aiohttp.ClientSession() as session:
+
             for url in urls:
+
                 name = url.split("/")[-1]
+
                 link = "https://batbin.me/raw/" + name
 
                 async with session.get(link) as resp:
+
                     resp.raise_for_status()
 
-                    with open(f"{self.cookie_dir}/{name}.txt", "wb") as fw:
+                    with open(
+                        f"{self.cookie_dir}/{name}.txt",
+                        "wb"
+                    ) as fw:
+
                         fw.write(await resp.read())
 
-        logger.info(f"Cookies saved in {self.cookie_dir}.")
+        logger.info(
+            f"Cookies saved in {self.cookie_dir}."
+        )
 
     def valid(self, url: str) -> bool:
-        return bool(re.match(self.regex, url))
+
+        return bool(
+            re.match(self.regex, url)
+        )
 
     def invalid(self, url: str) -> bool:
-        return bool(re.match(self.iregex, url))
+
+        return bool(
+            re.match(self.iregex, url)
+        )
 
     async def search(
         self,
@@ -86,6 +125,7 @@ class YouTube:
     ) -> Track | None:
 
         try:
+
             _search = VideosSearch(
                 query,
                 limit=1,
@@ -95,6 +135,7 @@ class YouTube:
             results = await _search.next()
 
         except Exception:
+
             return None
 
         if results and results["result"]:
@@ -103,14 +144,25 @@ class YouTube:
 
             return Track(
                 id=data.get("id"),
-                channel_name=data.get("channel", {}).get("name"),
+                channel_name=data.get(
+                    "channel",
+                    {}
+                ).get("name"),
                 duration=data.get("duration"),
-                duration_sec=utils.to_seconds(data.get("duration")),
+                duration_sec=utils.to_seconds(
+                    data.get("duration")
+                ),
                 message_id=m_id,
                 title=data.get("title")[:25],
-                thumbnail=data.get("thumbnails", [{}])[-1].get("url").split("?")[0],
+                thumbnail=data.get(
+                    "thumbnails",
+                    [{}]
+                )[-1].get("url").split("?")[0],
                 url=data.get("link"),
-                view_count=data.get("viewCount", {}).get("short"),
+                view_count=data.get(
+                    "viewCount",
+                    {}
+                ).get("short"),
                 video=video,
             )
 
@@ -127,17 +179,25 @@ class YouTube:
         tracks = []
 
         try:
+
             plist = await Playlist.get(url)
 
             for data in plist["videos"][:limit]:
 
                 track = Track(
                     id=data.get("id"),
-                    channel_name=data.get("channel", {}).get("name", ""),
+                    channel_name=data.get(
+                        "channel",
+                        {}
+                    ).get("name", ""),
                     duration=data.get("duration"),
-                    duration_sec=utils.to_seconds(data.get("duration")),
+                    duration_sec=utils.to_seconds(
+                        data.get("duration")
+                    ),
                     title=data.get("title")[:25],
-                    thumbnail=data.get("thumbnails")[-1].get("url").split("?")[0],
+                    thumbnail=data.get(
+                        "thumbnails"
+                    )[-1].get("url").split("?")[0],
                     url=data.get("link").split("&list=")[0],
                     user=user,
                     view_count="",
@@ -147,6 +207,7 @@ class YouTube:
                 tracks.append(track)
 
         except Exception:
+
             pass
 
         return tracks
@@ -158,6 +219,7 @@ class YouTube:
     ) -> str | None:
 
         try:
+
             endpoint = f"{YTPROXY}/info/{video_id}"
 
             headers = {
@@ -174,6 +236,7 @@ class YouTube:
             data = response.json()
 
             if data.get("status") != "success":
+
                 return None
 
             file_url = (
@@ -183,6 +246,7 @@ class YouTube:
             )
 
             if not file_url:
+
                 return None
 
             ext = "mp4" if video else "webm"
@@ -190,6 +254,7 @@ class YouTube:
             filename = f"downloads/{video_id}.{ext}"
 
             if Path(filename).exists():
+
                 return filename
 
             r = requests.get(
@@ -199,26 +264,38 @@ class YouTube:
             )
 
             with open(filename, "wb") as f:
+
                 for chunk in r.iter_content(1024 * 1024):
+
                     if chunk:
+
                         f.write(chunk)
 
             return filename
 
         except Exception as ex:
-            logger.warning("API Download failed: %s", ex)
+
+            logger.warning(
+                "API Download failed: %s",
+                ex
+            )
+
             return None
 
     async def download(
         self,
         video_id: str,
         video: bool = False
-    ) -> str |None:
+    ) -> str | None:
 
         # API DOWNLOAD
-        api_file = await self.api_download(video_id, video)
+        api_file = await self.api_download(
+            video_id,
+            video
+        )
 
         if api_file:
+
             return api_file
 
         # FALLBACK YT-DLP
@@ -229,6 +306,7 @@ class YouTube:
         filename = f"downloads/{video_id}.{ext}"
 
         if Path(filename).exists():
+
             return filename
 
         cookie = self.get_cookies()
@@ -248,7 +326,8 @@ class YouTube:
 
             ydl_opts = {
                 **base_opts,
-                "format": "(bestvideo[height<=?720][width<=?1280][ext=mp4])+(bestaudio)",
+                "format":
+                "(bestvideo[height<=?720][width<=?1280][ext=mp4])+(bestaudio)",
                 "merge_output_format": "mp4",
             }
 
@@ -256,7 +335,8 @@ class YouTube:
 
             ydl_opts = {
                 **base_opts,
-                "format": "bestaudio[ext=webm][acodec=opus]",
+                "format":
+                "bestaudio[ext=webm][acodec=opus]",
             }
 
         def _download():
@@ -264,16 +344,23 @@ class YouTube:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
 
                 try:
+
                     ydl.download([url])
 
                 except (
                     yt_dlp.utils.DownloadError,
                     yt_dlp.utils.ExtractorError
                 ):
+
                     return None
 
                 except Exception as ex:
-                    logger.warning("Download failed: %s", ex)
+
+                    logger.warning(
+                        "Download failed: %s",
+                        ex
+                    )
+
                     return None
 
             return filename
