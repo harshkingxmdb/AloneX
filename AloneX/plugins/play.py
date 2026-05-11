@@ -20,7 +20,6 @@ def playlist_to_queue(chat_id: int, tracks: list) -> str:
     text = text[:1948] + "</blockquote>"
     return text
 
-
 @app.on_message(
     filters.command(["play", "playforce", "vplay", "vplayforce"])
     & filters.group
@@ -38,10 +37,7 @@ async def play_hndlr(
 ) -> None:
     sent = await m.reply_text(m.lang["play_searching"])
     file = None
-
-    # FIXED MENTION ERROR
-    mention = m.from_user.first_name
-
+    mention = m.from_user.mention
     media = tg.get_media(m.reply_to_message) if m.reply_to_message else None
     tracks = []
 
@@ -69,7 +65,6 @@ async def play_hndlr(
     elif len(m.command) >= 2:
         query = " ".join(m.command[1:])
         file = await yt.search(query, sent.id, video=video)
-
         if not file:
             return await sent.edit_text(
                 m.lang["play_not_found"].format(config.SUPPORT_CHAT)
@@ -84,19 +79,15 @@ async def play_hndlr(
 
     if file.duration_sec > config.DURATION_LIMIT:
         return await sent.edit_text(
-            m.lang["play_duration_limit"].format(
-                config.DURATION_LIMIT // 60
-            )
+            m.lang["play_duration_limit"].format(config.DURATION_LIMIT // 60)
         )
 
     if await db.is_logger():
         await utils.play_log(m, file.title, file.duration)
 
     file.user = mention
-
     if force:
         queue.force_add(m.chat.id, file)
-
     else:
         position = queue.add(m.chat.id, file)
 
@@ -107,57 +98,33 @@ async def play_hndlr(
                     file.url,
                     file.title,
                     file.duration,
-                    mention,
+                    m.from_user.mention,
                 ),
                 reply_markup=buttons.play_queued(
-                    m.chat.id,
-                    file.id,
-                    m.lang["play_now"],
+                    m.chat.id, file.id, m.lang["play_now"]
                 ),
             )
-
             if tracks:
                 added = playlist_to_queue(m.chat.id, tracks)
-
                 await app.send_message(
                     chat_id=m.chat.id,
-                    text=m.lang["playlist_queued"].format(
-                        len(tracks)
-                    )
-                    + added,
+                    text=m.lang["playlist_queued"].format(len(tracks)) + added,
                 )
-
             return
 
     if not file.file_path:
         fname = f"downloads/{file.id}.{'mp4' if video else 'webm'}"
-
         if Path(fname).exists():
             file.file_path = fname
-
         else:
             await sent.edit_text(m.lang["play_downloading"])
+            file.file_path = await yt.download(file.id, video=video)
 
-            file.file_path = await yt.download(
-                file.id,
-                video=video,
-            )
-
-    await anon.play_media(
-        chat_id=m.chat.id,
-        message=sent,
-        media=file,
-    )
-
+    await anon.play_media(chat_id=m.chat.id, message=sent, media=file)
     if not tracks:
         return
-
     added = playlist_to_queue(m.chat.id, tracks)
-
     await app.send_message(
         chat_id=m.chat.id,
-        text=m.lang["playlist_queued"].format(
-            len(tracks)
-        )
-        + added,
-                                )
+        text=m.lang["playlist_queued"].format(len(tracks)) + added,
+                     )
