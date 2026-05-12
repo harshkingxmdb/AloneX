@@ -24,7 +24,7 @@ lang_codes = {
     "pt": "Portuguese",
     "ru": "Russian",
     "zh": "Chinese",
-    "mm': "Burmese",
+    "mm": "Burmese",
 }
 
 
