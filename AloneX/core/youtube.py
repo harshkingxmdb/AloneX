@@ -17,7 +17,6 @@ from py_yt import Playlist, VideosSearch
 from AloneX import logger
 from AloneX.helpers import Track, utils
 
-# CONFIG FIX
 from config import Config
 
 config = Config()
@@ -81,6 +80,8 @@ class YouTube:
     ) -> None:
 
         logger.info("Saving cookies from urls...")
+
+        os.makedirs(self.cookie_dir, exist_ok=True)
 
         async with aiohttp.ClientSession() as session:
 
@@ -206,9 +207,12 @@ class YouTube:
 
                 tracks.append(track)
 
-        except Exception:
+        except Exception as ex:
 
-            pass
+            logger.warning(
+                "Playlist error: %s",
+                ex
+            )
 
         return tracks
 
@@ -233,9 +237,22 @@ class YouTube:
                 timeout=30
             )
 
+            if response.status_code != 200:
+
+                logger.warning(
+                    "API status code: %s",
+                    response.status_code
+                )
+
+                return None
+
             data = response.json()
 
             if data.get("status") != "success":
+
+                logger.warning(
+                    "API failed response."
+                )
 
                 return None
 
@@ -252,6 +269,8 @@ class YouTube:
             ext = "mp4" if video else "webm"
 
             filename = f"downloads/{video_id}.{ext}"
+
+            os.makedirs("downloads", exist_ok=True)
 
             if Path(filename).exists():
 
@@ -288,7 +307,7 @@ class YouTube:
         video: bool = False
     ) -> str | None:
 
-        # API DOWNLOAD
+        # TRY API DOWNLOAD FIRST
         api_file = await self.api_download(
             video_id,
             video
@@ -298,18 +317,18 @@ class YouTube:
 
             return api_file
 
-        # FALLBACK YT-DLP
+        # FALLBACK TO YT-DLP
         url = self.base + video_id
 
         ext = "mp4" if video else "webm"
 
         filename = f"downloads/{video_id}.{ext}"
 
+        os.makedirs("downloads", exist_ok=True)
+
         if Path(filename).exists():
 
             return filename
-
-        cookie = self.get_cookies()
 
         base_opts = {
             "outtmpl": "downloads/%(id)s.%(ext)s",
@@ -319,15 +338,36 @@ class YouTube:
             "no_warnings": True,
             "overwrites": False,
             "nocheckcertificate": True,
-            "cookiefile": cookie,
+
+            # HEROKU FIX
+            "source_address": "0.0.0.0",
+
+            # YOUTUBE ANTI-BOT FIX
+            "extractor_args": {
+                "youtube": {
+                    "player_client": ["android"]
+                }
+            },
+
+            # MOBILE USER AGENT
+            "http_headers": {
+                "User-Agent": (
+                    "Mozilla/5.0 (Linux; Android 13)"
+                )
+            },
         }
 
         if video:
 
             ydl_opts = {
                 **base_opts,
-                "format":
-                "(bestvideo[height<=?720][width<=?1280][ext=mp4])+(bestaudio)",
+
+                "format": (
+                    "(bestvideo[height<=?720]"
+                    "[width<=?1280][ext=mp4])"
+                    "+(bestaudio)"
+                ),
+
                 "merge_output_format": "mp4",
             }
 
@@ -335,34 +375,40 @@ class YouTube:
 
             ydl_opts = {
                 **base_opts,
-                "format":
-                "bestaudio[ext=webm][acodec=opus]",
+                "format": "bestaudio/best",
             }
 
         def _download():
 
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            try:
 
-                try:
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
 
                     ydl.download([url])
 
-                except (
-                    yt_dlp.utils.DownloadError,
-                    yt_dlp.utils.ExtractorError
-                ):
+                return filename
 
-                    return None
+            except (
+                yt_dlp.utils.DownloadError,
+                yt_dlp.utils.ExtractorError
+            ) as ex:
 
-                except Exception as ex:
+                logger.warning(
+                    "YT-DLP Error: %s",
+                    ex
+                )
 
-                    logger.warning(
-                        "Download failed: %s",
-                        ex
-                    )
+                return None
 
-                    return None
+            except Exception as ex:
 
-            return filename
+                logger.warning(
+                    "Download failed: %s",
+                    ex
+                )
+
+                return None
+
+        await asyncio.sleep(1)
 
         return await asyncio.to_thread(_download)
