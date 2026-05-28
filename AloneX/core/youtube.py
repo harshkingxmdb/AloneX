@@ -317,18 +317,9 @@ class YouTube:
 
             return api_file
 
-        # FALLBACK TO YT-DLP
         url = self.base + video_id
 
-        ext = "mp4" if video else "webm"
-
-        filename = f"downloads/{video_id}.{ext}"
-
         os.makedirs("downloads", exist_ok=True)
-
-        if Path(filename).exists():
-
-            return filename
 
         base_opts = {
             "outtmpl": "downloads/%(id)s.%(ext)s",
@@ -342,20 +333,30 @@ class YouTube:
             # HEROKU FIX
             "source_address": "0.0.0.0",
 
-            # YOUTUBE ANTI-BOT FIX
+            # YOUTUBE FIX 2026
             "extractor_args": {
                 "youtube": {
-                    "player_client": ["android"]
+                    "player_client": [
+                        "android",
+                        "web"
+                    ]
                 }
             },
 
-            # MOBILE USER AGENT
+            # MOBILE HEADERS
             "http_headers": {
                 "User-Agent": (
-                    "Mozilla/5.0 (Linux; Android 13)"
+                    "Mozilla/5.0 "
+                    "(Linux; Android 14)"
                 )
             },
         }
+
+        cookie_file = self.get_cookies()
+
+        if cookie_file:
+
+            base_opts["cookiefile"] = cookie_file
 
         if video:
 
@@ -364,7 +365,7 @@ class YouTube:
 
                 "format": (
                     "(bestvideo[height<=?720]"
-                    "[width<=?1280][ext=mp4])"
+                    "[ext=mp4])"
                     "+(bestaudio)"
                 ),
 
@@ -382,11 +383,58 @@ class YouTube:
 
             try:
 
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                with yt_dlp.YoutubeDL(
+                    ydl_opts
+                ) as ydl:
 
-                    ydl.download([url])
+                    info = ydl.extract_info(
+                        url,
+                        download=True
+                    )
 
-                return filename
+                    file_path = ydl.prepare_filename(
+                        info
+                    )
+
+                    # AUDIO FORMAT FIX
+                    if not video:
+
+                        possible_exts = [
+                            ".webm",
+                            ".m4a",
+                            ".mp3",
+                            ".opus"
+                        ]
+
+                        base = os.path.splitext(
+                            file_path
+                        )[0]
+
+                        for ext in possible_exts:
+
+                            p = base + ext
+
+                            if os.path.exists(p):
+
+                                return p
+
+                    # VIDEO OUTPUT
+                    if os.path.exists(file_path):
+
+                        return file_path
+
+                    # MP4 MERGE FIX
+                    merged = (
+                        os.path.splitext(
+                            file_path
+                        )[0] + ".mp4"
+                    )
+
+                    if os.path.exists(merged):
+
+                        return merged
+
+                    return None
 
             except (
                 yt_dlp.utils.DownloadError,
@@ -411,4 +459,6 @@ class YouTube:
 
         await asyncio.sleep(1)
 
-        return await asyncio.to_thread(_download)
+        return await asyncio.to_thread(
+            _download
+        )
