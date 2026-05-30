@@ -238,22 +238,13 @@ class YouTube:
             )
 
             if response.status_code != 200:
-
-                logger.warning(
-                    "API status code: %s",
-                    response.status_code
-                )
-
+                logger.warning("API status code: %s", response.status_code)
                 return None
 
             data = response.json()
 
             if data.get("status") != "success":
-
-                logger.warning(
-                    "API failed response."
-                )
-
+                logger.warning("API failed response.")
                 return None
 
             file_url = (
@@ -263,18 +254,21 @@ class YouTube:
             )
 
             if not file_url:
-
+                logger.warning("No download URL received.")
                 return None
 
             ext = "mp4" if video else "webm"
-
             filename = f"downloads/{video_id}.{ext}"
 
             os.makedirs("downloads", exist_ok=True)
 
             if Path(filename).exists():
-
-                return filename
+                try:
+                    if os.path.getsize(filename) > 50000:
+                        return filename
+                    os.remove(filename)
+                except Exception:
+                    pass
 
             r = requests.get(
                 file_url,
@@ -282,13 +276,27 @@ class YouTube:
                 timeout=60
             )
 
+            if r.status_code != 200:
+                logger.warning("Download URL status code: %s", r.status_code)
+                return None
+
             with open(filename, "wb") as f:
-
                 for chunk in r.iter_content(1024 * 1024):
-
                     if chunk:
-
                         f.write(chunk)
+
+            if not os.path.exists(filename):
+                return None
+
+            size = os.path.getsize(filename)
+
+            if size < 50000:
+                logger.warning("Downloaded file too small: %s bytes", size)
+                try:
+                    os.remove(filename)
+                except Exception:
+                    pass
+                return None
 
             return filename
 
