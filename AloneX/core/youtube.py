@@ -3,8 +3,6 @@
 
 import os
 import re
-import yt_dlp
-import random
 import asyncio
 import aiohttp
 from pathlib import Path
@@ -24,10 +22,6 @@ YTPROXY = config.YTPROXY_URL
 class YouTube:
     def __init__(self):
         self.base = "https://www.youtube.com/watch?v="
-        self.cookies = []
-        self.checked = False
-        self.cookie_dir = "anony/cookies"
-        self.warned = False
 
         self.regex = re.compile(
             r"(https?://)?(www\.|m\.|music\.)?"
@@ -41,31 +35,14 @@ class YouTube:
             r"|playlist\?list=PL[A-Za-z0-9_-]+|[A-Za-z0-9_-]{11}))\S*"
         )
 
-    # ---------------- COOKIES ---------------- #
-
-    def get_cookies(self):
-        if not self.checked:
-            if os.path.exists(self.cookie_dir):
-                for file in os.listdir(self.cookie_dir):
-                    if file.endswith(".txt"):
-                        self.cookies.append(f"{self.cookie_dir}/{file}")
-            self.checked = True
-
-        if not self.cookies:
-            if not self.warned:
-                self.warned = True
-                logger.warning("Cookies missing, may fail downloads")
-            return None
-
-        return random.choice(self.cookies)
-
     # ---------------- SEARCH ---------------- #
 
     async def search(self, query: str, m_id: int, video: bool = False):
         try:
             _search = VideosSearch(query, limit=1, with_live=False)
             results = await _search.next()
-        except Exception:
+        except Exception as e:
+            logger.error(f"Search Error: {e}")
             return None
 
         if results and results["result"]:
@@ -105,74 +82,71 @@ class YouTube:
                         video=video,
                     )
                 )
-        except Exception:
-            pass
+        except Exception as e:
+            logger.error(f"Playlist Error: {e}")
 
         return tracks
 
-    # ---------------- DOWNLOAD ---------------- #
+    # ---------------- DOWNLOAD (API ONLY) ---------------- #
 
     async def download(self, video_id: str, video: bool = False) -> str | None:
         url = self.base + video_id
 
-        Path("downloads").mkdir(exist_ok=True)
+        # Heroku-safe temp directory
+        Path("/tmp").mkdir(exist_ok=True)
 
-        # 🔥 TRY YTPROXY API
-        try:
-            api_url = f"{YTPROXY}/download"
-            params = {
-                "url": url,
-                "api_key": YT_API_KEY,
-                "video": str(video).lower(),
-            }
-
-            async with aiohttp.ClientSession() as session:
-                async with session.get(api_url, params=params) as resp:
-                    if resp.status == 200:
-                        data = await resp.json()
-
-                        if data.get("status") and data.get("file"):
-                            file_url = data["file"]
-                            ext = "mp4" if video else "mp3"
-                            filename = f"downloads/{video_id}.{ext}"
-
-                            async with session.get(file_url) as file_resp:
-                                with open(filename, "wb") as f:
-                                    f.write(await file_resp.read())
-
-                            logger.info("Downloaded via API")
-                            return filename
-
-        except Exception as e:
-            logger.warning(f"API failed: {e}")
-
-        # 🔁 FALLBACK yt-dlp
-        cookie = self.get_cookies()
-
-        ydl_opts = {
-            "outtmpl": "downloads/%(id)s.%(ext)s",
-            "quiet": True,
-            "noplaylist": True,
+        api_url = f"{YTPROXY}/download"
+        params = {
+            "url": url,
+            "api_key": YT_API_KEY,
+            "video": str(video).lower(),
         }
 
-        if cookie:
-            ydl_opts["cookiefile"] = cookie
+        for attempt in range(3):  # retry system
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(api_url, params=params, timeout=60) as resp:
 
-        if video:
-            ydl_opts["format"] = "best[ext=mp4]"
-        else:
-            ydl_opts["format"] = "bestaudio/best"
+                        if resp.status != 200:
+                            logger.error(f"API HTTP Error: {resp.status}")
+                            continue
 
-        def _download():
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                try:
-                    info = ydl.extract_info(url, download=True)
-                    return ydl.prepare_filename(info)
-                except Exception as ex:
-                    logger.warning(f"yt-dlp failed: {ex}")
-                    return None
+                        data = await resp.json()
 
-        return await asyncio.to_thread(_download)
+                        if not data.get("status"):
+                            logger.error("API returned failure status")
+                            continue
+
+                        file_url = data.get("file")
+                        if not file_url:
+                            logger.error("No file URL in API response")
+                            continue
+
+                        ext = "mp4" if video else "mp3"
+                        filename = f"/tmp/{video_id}.{ext}"
+
+                        async with session.get(file_url) as file_resp:
+                            if file_resp.status != 200:
+                                logger.error("File download failed")
+                                continue
+
+                            with open(filename, "wb") as f:
+                                f.write(await file_resp.read())
+
+                        logger.info("Downloaded via API successfully")
+                        return filename
+
+            except asyncio.TimeoutError:
+                logger.warning(f"Timeout (Attempt {attempt+1})")
+            except aiohttp.ClientError as e:
+                logger.warning(f"Network Error: {e}")
+            except Exception as e:
+                logger.error(f"Unexpected Error: {e}")
+
+            await asyncio.sleep(2)
+
+        logger.error("Download failed after retries")
+        return None
 
     # ---------------- VALIDATION ---------------- #
 
