@@ -66,9 +66,9 @@
     "ping_pong": "<u><b>Pong!</b></u>\n\n<b>Latency:</b> <code>{0}ms</code>\n\n<b>Uptime:</b> {1}\n<b>CPU:</b> <code>{2}%</code>\n<b>RAM:</b> <code>{3}%</code>\n<b>Disk:</b> <code>{4}%</code>\n<b>PyTgCalls Latency:</b> <code>{5}ms</code>",
     "play_admin": "<u><b>Admin only play</b></u>\n\nOnly admins are allowed to play in this chat.",
     "play_banned": "<u><b>{0} assistant is banned your chat</b></u>\n\n<b>ID:</b> <code>{1}</code>\n<b>Name:</b> {2}\n<b>Username:</b> {3}",
-    "play_media": "<blockquote><u><b>🎧 𝐒ᴛʀᴇᴀᴍ 𝐈ɴɪᴛɪᴀᴛᴇᴅ |</b></u></blockquote>\n<blockquote><b>➣ 𝐓ɪᴛʟᴇ :</b> <a href={0}>{1}</a>\n<b>➦ 𝐃ᴜʀᴀᴛɪᴏɴ :</b> {2} 𝐌ɪɴᴜᴛᴇs\n<b>➦ 𝐏ʟᴀʏᴇᴅ 𝐁ʏ :</b> {3}</b></blockquote>",
+    "play_media": "<blockquote><emoji id=5929221469027437894>🎶</emoji><b> <b>𝐒ᴛʀᴇᴀᴍ 𝐈ɴɪᴛɪᴀᴛᴇᴅ |</b></blockquote>\n<blockquote><b><emoji id=5972072533833289156>🎶</emoji><b> 𝐓ɪᴛʟᴇ :</b> <a href={0}>{1}</a>\n<b><emoji id=5408910404732595664>⏱</emoji><b> 𝐃ᴜʀᴀᴛɪᴏɴ :</b> {2} 𝐌ɪɴᴜᴛᴇs\n<b><emoji id=5409132617750555920>🎶</emoji><b> 𝐏ʟᴀʏᴇᴅ 𝐁ʏ :</b> {3}</b></blockquote>",
     "play_log": "<u>{0} Play Log</u>\n\n<b>Chat:</b> <code>{1}</code> | {2}\n<b>User:</b> <code>{3}</code> | {4}\n<b>Message link:</b> {5}\n\n<b>➣ 𝐓ɪᴛʟᴇ :</b> {6}\n<b>➦ 𝐃ᴜʀᴀᴛɪᴏɴ : </b> {7} 𝐌ɪɴᴜᴛᴇs",
-    "play_queued": "<blockquote><u><b>➕ 𝐒ᴏɴɢ 𝐄ɴǫᴜᴇᴜᴇᴅ • 𝐒ʟᴏᴛ #{0}</b></u></blockquote>\n<b><blockquote><b>➣ 𝐓ɪᴛʟᴇ :</b> <a href={1}>{2}</a>\n<b>➦ 𝐃ᴜʀᴀᴛɪᴏɴ : </b> {3} 𝐌ɪɴᴜᴛᴇs\n<b>➦ 𝐏ʟᴀʏᴇᴅ 𝐁ʏ :</b> {4}</b></blockquote>",
+    "play_queued": "<blockquote><emoji id=5895512435384651275>🎶</emoji><b> <b>𝐒ᴏɴɢ 𝐄ɴǫᴜᴇᴜᴇᴅ • 𝐒ʟᴏᴛ #{0}</blockquote>\n<blockquote><emoji id=5972072533833289156>🎶</emoji><b> 𝐓ɪᴛʟᴇ :</b> <a href={1}>{2}</a>\n<b><emoji id=5408910404732595664>⏱</emoji><b> 𝐃ᴜʀᴀᴛɪᴏɴ : </b> {3} 𝐌ɪɴᴜᴛᴇs\n<b><emoji id=5409132617750555920>🎶</emoji><b> 𝐏ʟᴀʏᴇᴅ 𝐁ʏ :</b> {4}</b></blockquote>",
     "play_usage": "<b>Usage:</b>\n\n<code>/play attention</code>",
     "play_seeking": "Seeking the current stream...",
     "play_again": "Replaying the current media...",
@@ -104,7 +104,7 @@
     "queue_fetching": "Fetching queue...",
     "restarting": "Restarting...",
     "restarted": "Restart in progress. Don't worry, it'll only take a few seconds… maybe.",
-    "start_pm": "────「 {1} 」────</b>\n\n<blockquote><b>𝐇єу 𝐓нєяє •🎙 {0} !</b></blockquote>\n<blockquote><b>🎵✨ᴅɪᴛᴄʜ ᴛʜᴇ ᴛʜʀᴇᴀᴅs, ʟᴇᴛ's ᴠɪʙᴇ ᴛᴏ ᴛʜᴇ ʀʜʏᴛʜᴍ.\nᴊᴏɪɴ ᴍᴇ ᴏɴ ᴛᴇʟᴇɢʀᴀᴍ's ᴄᴜᴛɪᴇsᴛ ᴍᴜsɪᴄ ʙᴏᴛ.🎶</b></blockquote>",
+    "start_pm": "<b>──「 {0} 」──</b>\n\n<blockquote><emoji id=6086714986309097798>🔥</emoji> <b>𝐇єу 𝐓нєяє •🎙 {0} !</b><emoji id=6089165857856952184>🌙</emoji></blockquote>\n<blockquote><emoji id=6269085886177087845>✨</emoji> <b>ᴅɪᴛᴄʜ ᴛʜᴇ ᴛʜʀᴇᴀᴅs, ʟᴇᴛ's ᴠɪʙᴇ ᴛᴏ ᴛʜᴇ ʀʜʏᴛʜᴍ.</b>\n<emoji id=6113685078825505075>✨</emoji> <b>ᴊᴏɪɴ ᴍᴇ ᴏɴ ᴛᴇʟᴇɢʀᴀᴍ's ᴄᴜᴛɪᴇsᴛ ᴍᴜsɪᴄ ʙᴏᴛ.🎶</b></blockquote>",
     "start_gp": "Hey,\nThis is {0}\n\n<u><b>A music player bot with some awesome and useful features.</b></u>",
     "start_settings": "<u><b>{0} settings</b></u>\n\nClick the buttons below to change this chat's current settings.",
     "stats_fetching": "Fetching stats...",
@@ -151,5 +151,6 @@
     "help_5": "𝐏ʟᴀʏ",
     "help_6": "𝐐ᴜᴇᴜᴇ",
     "help_7": "𝐒ᴛᴀᴛs",
-    "help_8": "𝐒ᴜᴅᴏᴇʀs"
+    "help_8": "𝐒ᴜᴅᴏᴇʀs",
+"help_close": "⌯ 𝐂ʟσsє ⌯"
 }
