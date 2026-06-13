@@ -99,7 +99,38 @@ async def download_video(link: str) -> Union[str, None]:
     return await download_file(video_id, "mp4")
 
 
+
+class Track:
+    def __init__(self, id, title, duration, duration_sec, thumb, file_path=None):
+        self.id = id
+        self.title = title
+        self.duration = duration
+        self.duration_sec = duration_sec
+        self.thumb = thumb
+        self.file_path = file_path
+        self.url = f"https://www.youtube.com/watch?v={id}"
+
 class YouTubeAPI:
+
+    async def search(self, query, message_id=None, video=False):
+        try:
+            results = VideosSearch(query, limit=1)
+            data = (await results.next())["result"][0]
+            return Track(
+                id=data["id"],
+                title=data["title"],
+                duration=data.get("duration", "0:00"),
+                duration_sec=time_to_seconds(data.get("duration", "0:00")),
+                thumb=data["thumbnails"][0]["url"],
+            )
+        except Exception:
+            return None
+
+    async def download(self, video_id, video=False):
+        if video:
+            return await download_video(video_id)
+        return await download_song(video_id)
+
     def __init__(self):
         self.base = "https://www.youtube.com/watch?v="
         self.listbase = "https://youtube.com/playlist?list="
