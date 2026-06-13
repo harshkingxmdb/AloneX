@@ -117,12 +117,21 @@ class Track:
         self.title = title
         self.duration = duration
         self.duration_sec = duration_sec
+
+        # Thumbnail support
         self.thumb = thumb
+        self.thumbnail = thumb
+
         self.file_path = file_path
         self.video = video
         self.user = user
         self.message_id = message_id
         self.time = 0
+
+        # Thumbnail.py ke liye required
+        self.channel_name = "YouTube"
+        self.view_count = "0 Views"
+
         self.url = f"https://www.youtube.com/watch?v={id}"
 
 class YouTubeAPI:
