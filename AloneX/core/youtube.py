@@ -101,13 +101,28 @@ async def download_video(link: str) -> Union[str, None]:
 
 
 class Track:
-    def __init__(self, id, title, duration, duration_sec, thumb, file_path=None):
+    def __init__(
+        self,
+        id,
+        title,
+        duration,
+        duration_sec,
+        thumb,
+        file_path=None,
+        video=False,
+        user="Unknown",
+        message_id=0,
+    ):
         self.id = id
         self.title = title
         self.duration = duration
         self.duration_sec = duration_sec
         self.thumb = thumb
         self.file_path = file_path
+        self.video = video
+        self.user = user
+        self.message_id = message_id
+        self.time = 0
         self.url = f"https://www.youtube.com/watch?v={id}"
 
 class YouTubeAPI:
@@ -122,6 +137,8 @@ class YouTubeAPI:
                 duration=data.get("duration", "0:00"),
                 duration_sec=time_to_seconds(data.get("duration", "0:00")),
                 thumb=data["thumbnails"][0]["url"],
+                video=video,
+                message_id=message_id or 0,
             )
         except Exception:
             return None
