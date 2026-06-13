@@ -1,6 +1,263 @@
-# Copyright (c) 2025 TheHamkerAlone
+# Copyright (c) 2025 AnonymousX1025
 # Licensed under the MIT License.
-# This file is part of AloneXMusic
-# ALONE-CODER
+# This file is part of AnonXMusic
 
-import zlib, base64; exec(zlib.decompress(base64.b64decode("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")).decode("utf-8"))
+import re
+import yt_dlp
+import asyncio
+import requests
+
+from pathlib import Path
+from py_yt import Playlist, VideosSearch
+
+from AloneX import logger
+from AloneX.helpers import Track, utils
+
+from config import Config
+
+config = Config()
+
+YT_API_KEY = config.YT_API_KEY
+YTPROXY = config.YTPROXY_URL
+
+
+class YouTube:
+    def __init__(self):
+        self.base = "https://www.youtube.com/watch?v="
+
+        self.regex = re.compile(
+            r"(https?://)?(www\.|m\.|music\.)?"
+            r"(youtube\.com/(watch\?v=|shorts/|playlist\?list=)|youtu\.be/)"
+            r"([A-Za-z0-9_-]{11}|PL[A-Za-z0-9_-]+)([&?][^\s]*)?"
+        )
+
+        self.iregex = re.compile(
+            r"https?://(?:www\.|m\.|music\.)?(?:youtube\.com|youtu\.be)"
+            r"(?!/(watch\?v=[A-Za-z0-9_-]{11}|shorts/[A-Za-z0-9_-]{11}"
+            r"|playlist\?list=PL[A-Za-z0-9_-]+|[A-Za-z0-9_-]{11}))\S*"
+        )
+
+    def valid(self, url: str) -> bool:
+        return bool(re.match(self.regex, url))
+
+    def invalid(self, url: str) -> bool:
+        return bool(re.match(self.iregex, url))
+
+    async def search(
+        self,
+        query: str,
+        m_id: int,
+        video: bool = False
+    ) -> Track | None:
+
+        try:
+            _search = VideosSearch(
+                query,
+                limit=1,
+                with_live=False
+            )
+
+            results = await _search.next()
+
+        except Exception:
+            return None
+
+        if results and results["result"]:
+
+            data = results["result"][0]
+
+            return Track(
+                id=data.get("id"),
+                channel_name=data.get(
+                    "channel",
+                    {}
+                ).get("name"),
+                duration=data.get("duration"),
+                duration_sec=utils.to_seconds(
+                    data.get("duration")
+                ),
+                message_id=m_id,
+                title=data.get("title")[:25],
+                thumbnail=data.get(
+                    "thumbnails",
+                    [{}]
+                )[-1].get("url").split("?")[0],
+                url=data.get("link"),
+                view_count=data.get(
+                    "viewCount",
+                    {}
+                ).get("short"),
+                video=video,
+            )
+
+        return None
+
+    async def playlist(
+        self,
+        limit: int,
+        user: str,
+        url: str,
+        video: bool
+    ) -> list[Track | None]:
+
+        tracks = []
+
+        try:
+            plist = await Playlist.get(url)
+
+            for data in plist["videos"][:limit]:
+
+                track = Track(
+                    id=data.get("id"),
+                    channel_name=data.get(
+                        "channel",
+                        {}
+                    ).get("name", ""),
+                    duration=data.get("duration"),
+                    duration_sec=utils.to_seconds(
+                        data.get("duration")
+                    ),
+                    title=data.get("title")[:25],
+                    thumbnail=data.get(
+                        "thumbnails"
+                    )[-1].get("url").split("?")[0],
+                    url=data.get("link").split("&list=")[0],
+                    user=user,
+                    view_count="",
+                    video=video,
+                )
+
+                tracks.append(track)
+
+        except Exception:
+            pass
+
+        return tracks
+
+    async def api_download(
+        self,
+        video_id: str,
+        video: bool = False
+    ) -> str | None:
+
+        try:
+            endpoint = f"{YTPROXY}/info/{video_id}"
+
+            headers = {
+                "x-api-key": YT_API_KEY,
+                "User-Agent": "Mozilla/5.0"
+            }
+
+            response = requests.get(
+                endpoint,
+                headers=headers,
+                timeout=30
+            )
+
+            data = response.json()
+
+            if data.get("status") != "success":
+                return None
+
+            file_url = (
+                data.get("video_url")
+                if video
+                else data.get("audio_url")
+            )
+
+            if not file_url:
+                return None
+
+            ext = "mp4" if video else "webm"
+            filename = f"downloads/{video_id}.{ext}"
+
+            if Path(filename).exists():
+                return filename
+
+            r = requests.get(
+                file_url,
+                stream=True,
+                timeout=60
+            )
+
+            with open(filename, "wb") as f:
+                for chunk in r.iter_content(1024 * 1024):
+                    if chunk:
+                        f.write(chunk)
+
+            return filename
+
+        except Exception as ex:
+            logger.warning(
+                "API Download failed: %s",
+                ex
+            )
+            return None
+
+    async def download(
+        self,
+        video_id: str,
+        video: bool = False
+    ) -> str | None:
+
+        # API FIRST
+        api_file = await self.api_download(
+            video_id,
+            video
+        )
+
+        if api_file:
+            return api_file
+
+        # YT-DLP FALLBACK
+        url = self.base + video_id
+
+        ext = "mp4" if video else "webm"
+        filename = f"downloads/{video_id}.{ext}"
+
+        if Path(filename).exists():
+            return filename
+
+        base_opts = {
+            "outtmpl": "downloads/%(id)s.%(ext)s",
+            "quiet": True,
+            "noplaylist": True,
+            "geo_bypass": True,
+            "no_warnings": True,
+            "overwrites": False,
+            "nocheckcertificate": True,
+        }
+
+        if video:
+            ydl_opts = {
+                **base_opts,
+                "format": "(bestvideo[height<=?720][width<=?1280][ext=mp4])+(bestaudio)",
+                "merge_output_format": "mp4",
+            }
+        else:
+            ydl_opts = {
+                **base_opts,
+                "format": "bestaudio[ext=webm][acodec=opus]",
+            }
+
+        def _download():
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                try:
+                    ydl.download([url])
+
+                except (
+                    yt_dlp.utils.DownloadError,
+                    yt_dlp.utils.ExtractorError
+                ):
+                    return None
+
+                except Exception as ex:
+                    logger.warning(
+                        "Download failed: %s",
+                        ex
+                    )
+                    return None
+
+            return filename
+
+        return await asyncio.to_thread(_download)
