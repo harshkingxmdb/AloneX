@@ -137,20 +137,41 @@ class Track:
 class YouTubeAPI:
 
     async def search(self, query, message_id=None, video=False):
+    try:
+        results = VideosSearch(query, limit=1)
+        data = (await results.next())["result"][0]
+
+        track = Track(
+            id=data["id"],
+            title=data["title"],
+            duration=data.get("duration", "0:00"),
+            duration_sec=time_to_seconds(
+                data.get("duration", "0:00")
+            ),
+            thumb=data["thumbnails"][0]["url"],
+            video=video,
+            message_id=message_id or 0,
+        )
+
         try:
-            results = VideosSearch(query, limit=1)
-            data = (await results.next())["result"][0]
-            return Track(
-                id=data["id"],
-                title=data["title"],
-                duration=data.get("duration", "0:00"),
-                duration_sec=time_to_seconds(data.get("duration", "0:00")),
-                thumb=data["thumbnails"][0]["url"],
-                video=video,
-                message_id=message_id or 0,
-            )
-        except Exception:
-            return None
+            track.channel_name = data.get(
+                "channel", {}
+            ).get("name", "YouTube")
+        except:
+            pass
+
+        try:
+            track.view_count = data.get(
+                "viewCount", {}
+            ).get("short", "0 Views")
+        except:
+            pass
+
+        return track
+
+    except Exception as e:
+        print(f"Search Error: {e}")
+        return None
 
     async def download(self, video_id, video=False):
         if video:
