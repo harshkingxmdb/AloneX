@@ -137,41 +137,27 @@ class Track:
 class YouTubeAPI:
 
     async def search(self, query, message_id=None, video=False):
-    try:
-        results = VideosSearch(query, limit=1)
-        data = (await results.next())["result"][0]
-
-        track = Track(
-            id=data["id"],
-            title=data["title"],
-            duration=data.get("duration", "0:00"),
-            duration_sec=time_to_seconds(
-                data.get("duration", "0:00")
-            ),
-            thumb=data["thumbnails"][0]["url"],
-            video=video,
-            message_id=message_id or 0,
-        )
-
         try:
-            track.channel_name = data.get(
-                "channel", {}
-            ).get("name", "YouTube")
-        except:
-            pass
+            results = VideosSearch(query, limit=1)
+            data = (await results.next())["result"][0]
 
-        try:
-            track.view_count = data.get(
-                "viewCount", {}
-            ).get("short", "0 Views")
-        except:
-            pass
+            track = Track(
+                id=data["id"],
+                title=data["title"],
+                duration=data.get("duration", "0:00"),
+                duration_sec=time_to_seconds(data.get("duration", "0:00")),
+                thumb=data["thumbnails"][0]["url"],
+                video=video,
+                message_id=message_id or 0,
+            )
 
-        return track
+            track.channel_name = data.get("channel", {}).get("name", "YouTube")
+            track.view_count = data.get("viewCount", {}).get("short", "0 Views")
+            return track
 
-    except Exception as e:
-        print(f"Search Error: {e}")
-        return None
+        except Exception as e:
+            print(f"Search Error: {e}")
+            return None
 
     async def download(self, video_id, video=False):
         if video:
@@ -227,11 +213,21 @@ class YouTubeAPI:
         except Exception:
             return []
 
-        return [
-            v.get("id")
-            for v in (plist.get("videos") or [])[:limit]
-            if v and v.get("id")
-        ]
+        tracks = []
+        for v in (plist.get("videos") or [])[:limit]:
+            try:
+                tracks.append(
+                    Track(
+                        id=v["id"],
+                        title=v.get("title", "Unknown"),
+                        duration=v.get("duration", "0:00"),
+                        duration_sec=time_to_seconds(v.get("duration", "0:00")),
+                        thumb="",
+                    )
+                )
+            except Exception:
+                pass
+        return tracks
 
     async def formats(self, link: str):
         video_id = sanitize_video_id(link)
