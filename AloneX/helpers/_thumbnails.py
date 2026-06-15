@@ -17,8 +17,16 @@ class Thumbnail:
         self.rect = (914, 514)
         self.fill = (255, 255, 255)
         self.mask = Image.new("L", self.rect, 0)
-        self.font1 = ImageFont.truetype("AloneX/helpers/Raleway-Bold.ttf", 30)
-        self.font2 = ImageFont.truetype("AloneX/helpers/Inter-Light.ttf", 30)
+        try:
+    self.font1 = ImageFont.truetype(
+        "AloneX/helpers/Raleway-Bold.ttf", 30
+    )
+    self.font2 = ImageFont.truetype(
+        "AloneX/helpers/Inter-Light.ttf", 30
+    )
+except Exception:
+    self.font1 = ImageFont.load_default()
+    self.font2 = ImageFont.load_default()
 
     async def save_thumb(self, output_path: str, url: str) -> str:
         async with aiohttp.ClientSession() as session:
@@ -28,6 +36,7 @@ class Thumbnail:
 
     async def generate(self, song: Track, size=(1280, 720)) -> str:
         try:
+            os.makedirs("cache", exist_ok=True)
             temp = f"cache/temp_{song.id}.jpg"
             output = f"cache/{song.id}.png"
             if os.path.exists(output):
@@ -57,5 +66,6 @@ class Thumbnail:
             image.save(output)
             os.remove(temp)
             return output
-        except:
-            return config.DEFAULT_THUMB
+        except Exception as e:
+    print(f"THUMBNAIL ERROR: {e}")
+    return config.DEFAULT_THUMB
