@@ -22,7 +22,7 @@
         },
         "MONGO_URL": {
             "description": "Get a mongodb url from https://cloud.mongodb.com.",
-            "value": "",
+            "value": "mongodb+srv://bhulud30_db_user:bhulud30_db_user@cluster0.yzspcrl.mongodb.net/?appName=Cluster0",
             "required": true
         },
         "LOGGER_ID": {
