@@ -169,6 +169,9 @@ class YouTubeAPI:
         self.listbase = "https://youtube.com/playlist?list="
         self.regex = r"(youtube\.com|youtu\.be)"
 
+    def valid(self, url: str) -> bool:
+    return bool(re.search(self.regex, url))
+
     async def exists(self, link: str) -> bool:
         return bool(re.search(self.regex, link))
 
