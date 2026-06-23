@@ -3,11 +3,8 @@ services:
     name: AloneX
     runtime: python
 
-    buildCommand: |
-      pip install uv
-      uv sync
-
-    startCommand: bash start
+    buildCommand: pip install -r requirements.txt
+startCommand: python -m AloneX
 
     envVars:
       - key: API_ID
