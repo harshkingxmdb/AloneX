@@ -24,6 +24,7 @@ class Config:
 
         self.SUPPORT_CHANNEL = getenv("SUPPORT_CHANNEL", "https://t.me/shona_bots")
         self.SUPPORT_CHAT = getenv("SUPPORT_CHAT", "https://t.me/shona_support")
+        self.OWNER_USERNAME = getenv("OWNER_USERNAME", "https://t.me/thecderqueen")
 
         self.AUTO_LEAVE: bool = getenv("AUTO_LEAVE", "False").lower() == "true"
         self.AUTO_END: bool = getenv("AUTO_END", "False").lower() == "true"
