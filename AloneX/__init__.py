@@ -53,7 +53,7 @@ lang = Language()
 from AloneX.core.telegram import Telegram
 from AloneX.core.youtube import YouTube
 tg = Telegram()
-yt = YouTube
+yt = YouTube()
 
 from AloneX.helpers import Queue
 queue = Queue()
