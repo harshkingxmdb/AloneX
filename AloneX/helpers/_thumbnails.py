@@ -1,5 +1,3 @@
-FIX BY CODER QUEEN
-
 import os
 import aiohttp
 from PIL import (Image, ImageDraw, ImageEnhance,
