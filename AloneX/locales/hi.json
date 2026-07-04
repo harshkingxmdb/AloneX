@@ -155,5 +155,7 @@
     "audio": "🎵Audio",
     "video": "🎥Video",
     "enabled": "Enabled",
-    "disabled": "Disabled"
+    "disabled": "Disabled",
+    "help_9": "ऑटोप्ले",
+    "help_autoplay": "<u><b>ऑटोप्ले कमांड:</b></u>\n<i>क्यू खाली होने पर संगीत को अपने आप चलाते रहें।</i>\n\n/autoplay: ऑटोप्ले की वर्तमान स्थिति दिखाता है।\n/autoplay on: ऑटोप्ले चालू करता है — संबंधित गाने अपने आप बजते रहेंगे।\n/autoplay off: ऑटोप्ले बंद करता है — क्यू खाली होने पर प्लेबैक रुक जाएगा।"
 }
