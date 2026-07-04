@@ -1,9 +1,5 @@
-# Copyright (c) 2025 TeamshonaX
-# Licensed under the MIT License.
-# This file is make by @theshonabots
-#SHONA - BOTS
-
 import os
+import math
 import aiohttp
 
 from PIL import (
@@ -23,23 +19,25 @@ class Thumbnail:
         self.width = 1280
         self.height = 720
 
-        self.album_size = 450
-        self.radius = 40
+        self.album_size = 520
+        self.radius = 36
 
         self.font_title = ImageFont.truetype(
             "AloneX/helpers/Raleway-Bold.ttf",
-            58,
+            36,
         )
 
         self.font_artist = ImageFont.truetype(
             "AloneX/helpers/Inter-Light.ttf",
-            38,
+            26,
         )
 
         self.font_small = ImageFont.truetype(
             "AloneX/helpers/Inter-Light.ttf",
-            30,
+            22,
         )
+
+    # ---------------- basic helpers ----------------
 
     async def save_thumb(
         self,
@@ -72,6 +70,149 @@ class Thumbnail:
 
         return dots
 
+    # ---------------- icon drawing helpers ----------------
+
+    def draw_icon_bg(self, draw, center, radius, fill=(255, 255, 255, 60)):
+        x, y = center
+        draw.ellipse(
+            [x - radius, y - radius, x + radius, y + radius],
+            fill=fill,
+        )
+
+    def draw_star(self, draw, center, size, color=(255, 255, 255, 255)):
+        x, y = center
+        points = []
+        for i in range(10):
+            angle = math.pi / 2 + i * math.pi / 5
+            r = size if i % 2 == 0 else size * 0.42
+            points.append(
+                (x + r * math.cos(angle), y - r * math.sin(angle))
+            )
+        draw.polygon(points, outline=color, width=2)
+
+    def draw_dots_menu(self, draw, center, size, color=(120, 120, 120, 255)):
+        x, y = center
+        r = size * 0.11
+        for i in (-1, 0, 1):
+            cy = y + i * size * 0.34
+            draw.ellipse([x - r, cy - r, x + r, cy + r], fill=color)
+
+    def draw_circle_button(self, draw, center, radius, filled=True):
+        x, y = center
+        bbox = [x - radius, y - radius, x + radius, y + radius]
+        if filled:
+            draw.ellipse(bbox, fill=(255, 255, 255, 255))
+        else:
+            draw.ellipse(bbox, outline=(255, 255, 255, 180), width=3)
+
+    def draw_pause_bars(self, draw, center, size, color=(35, 25, 20, 255)):
+        x, y = center
+        bar_w = size * 0.17
+        bar_h = size * 0.9
+        gap = size * 0.20
+        draw.rounded_rectangle(
+            [x - gap - bar_w / 2, y - bar_h / 2, x - gap + bar_w / 2, y + bar_h / 2],
+            radius=2,
+            fill=color,
+        )
+        draw.rounded_rectangle(
+            [x + gap - bar_w / 2, y - bar_h / 2, x + gap + bar_w / 2, y + bar_h / 2],
+            radius=2,
+            fill=color,
+        )
+
+    def draw_skip_icon(self, draw, center, size, forward=True, color=(255, 255, 255, 255)):
+        x, y = center
+        tri_w = size * 0.44
+        tri_h = size * 0.95
+        gap = size * 0.26
+        for dx in (-gap, gap):
+            cx = x + dx
+            if forward:
+                pts = [
+                    (cx - tri_w / 2, y - tri_h / 2),
+                    (cx - tri_w / 2, y + tri_h / 2),
+                    (cx + tri_w / 2, y),
+                ]
+            else:
+                pts = [
+                    (cx + tri_w / 2, y - tri_h / 2),
+                    (cx + tri_w / 2, y + tri_h / 2),
+                    (cx - tri_w / 2, y),
+                ]
+            draw.polygon(pts, fill=color)
+
+    def draw_speaker(self, draw, pos, size, color=(255, 255, 255, 255), loud=True):
+        x, y = pos
+        body_w = size * 0.36
+        body_h = size * 0.5
+        draw.polygon(
+            [
+                (x, y - body_h * 0.22),
+                (x + body_w * 0.42, y - body_h * 0.22),
+                (x + body_w, y - body_h / 2),
+                (x + body_w, y + body_h / 2),
+                (x + body_w * 0.42, y + body_h * 0.22),
+                (x, y + body_h * 0.22),
+            ],
+            fill=color,
+        )
+        if loud:
+            draw.arc(
+                [x + body_w - 2, y - size * 0.38, x + body_w + size * 0.38, y + size * 0.38],
+                -55, 55, fill=color, width=3,
+            )
+            draw.arc(
+                [x + body_w - 2, y - size * 0.22, x + body_w + size * 0.22, y + size * 0.22],
+                -55, 55, fill=color, width=3,
+            )
+
+    def draw_quote_bubble(self, draw, center, size, color=(255, 255, 255, 255)):
+        x, y = center
+        top = y - size * 0.42
+        bottom = y + size * 0.10
+        draw.rounded_rectangle(
+            [x - size / 2, top, x + size / 2, bottom],
+            radius=size * 0.22,
+            outline=color,
+            width=3,
+        )
+        draw.polygon(
+            [
+                (x - size * 0.14, bottom - 2),
+                (x - size * 0.14, bottom + size * 0.24),
+                (x + size * 0.12, bottom - 2),
+            ],
+            fill=color,
+        )
+        qh = size * 0.16
+        qw = size * 0.09
+        cy = (top + bottom) / 2 - 2
+        draw.rounded_rectangle(
+            [x - size * 0.20, cy - qh / 2, x - size * 0.20 + qw, cy + qh / 2],
+            radius=2, fill=color,
+        )
+        draw.rounded_rectangle(
+            [x + size * 0.06, cy - qh / 2, x + size * 0.06 + qw, cy + qh / 2],
+            radius=2, fill=color,
+        )
+
+    def draw_list_icon(self, draw, center, size, color=(255, 255, 255, 255)):
+        x, y = center
+        line_w = size * 0.62
+        for dy in (-size * 0.28, 0, size * 0.28):
+            r = size * 0.05
+            draw.ellipse(
+                [x - line_w / 2 - r * 2, y + dy - r, x - line_w / 2, y + dy + r],
+                fill=color,
+            )
+            draw.line(
+                [(x - line_w / 2 + size * 0.14, y + dy), (x + line_w / 2, y + dy)],
+                fill=color, width=4,
+            )
+
+    # ---------------- main generator ----------------
+
     async def generate(
         self,
         song: Track,
@@ -89,251 +230,144 @@ class Thumbnail:
                 song.thumbnail,
             )
 
-            img = (
-                Image.open(temp)
-                .convert("RGBA")
-            )
+            img = Image.open(temp).convert("RGBA")
 
             bg = img.resize(
-                (
-                    self.width,
-                    self.height,
-                ),
+                (self.width, self.height),
                 Image.Resampling.LANCZOS,
             )
+            bg = bg.filter(ImageFilter.GaussianBlur(45))
+            bg = ImageEnhance.Brightness(bg).enhance(0.32)
+            bg = bg.convert("RGBA")
 
-            bg = bg.filter(
-                ImageFilter.GaussianBlur(40)
-            )
+            overlay = Image.new("RGBA", bg.size, (0, 0, 0, 0))
+            draw = ImageDraw.Draw(overlay)
 
-            bg = ImageEnhance.Brightness(
-                bg
-            ).enhance(0.40)
+            # ---------- album art (left) ----------
+            frame_x = 90
+            frame_y = (self.height - self.album_size) // 2
 
-            draw = ImageDraw.Draw(bg)
-
-            frame_x = 100
-            frame_y = (
-                self.height
-                - self.album_size
-            ) // 2
             album = img.resize(
-                (
-                    self.album_size,
-                    self.album_size,
-                ),
+                (self.album_size, self.album_size),
                 Image.Resampling.LANCZOS,
             )
 
-            mask = Image.new(
-                "L",
-                (
-                    self.album_size,
-                    self.album_size,
-                ),
-                0,
-            )
-
+            mask = Image.new("L", (self.album_size, self.album_size), 0)
             ImageDraw.Draw(mask).rounded_rectangle(
-                (
-                    0,
-                    0,
-                    self.album_size,
-                    self.album_size,
-                ),
+                (0, 0, self.album_size, self.album_size),
                 radius=self.radius,
                 fill=255,
             )
 
             shadow = Image.new(
                 "RGBA",
-                (
-                    self.album_size + 40,
-                    self.album_size + 40,
-                ),
+                (self.album_size + 40, self.album_size + 40),
                 (0, 0, 0, 0),
             )
-
             ImageDraw.Draw(shadow).rounded_rectangle(
-                (
-                    20,
-                    20,
-                    self.album_size + 20,
-                    self.album_size + 20,
-                ),
+                (20, 20, self.album_size + 20, self.album_size + 20),
                 radius=self.radius,
                 fill=(0, 0, 0, 170),
             )
+            shadow = shadow.filter(ImageFilter.GaussianBlur(18))
 
-            shadow = shadow.filter(
-                ImageFilter.GaussianBlur(18)
-            )
+            bg.alpha_composite(shadow, (frame_x - 20, frame_y - 20))
+            bg.paste(album, (frame_x, frame_y), mask)
 
-            bg.paste(
-                shadow,
-                (
-                    frame_x - 20,
-                    frame_y - 20,
-                ),
-                shadow,
-            )
+            # ---------- right column ----------
+            text_x = 716
+            right_edge = 1160
+            top_y = 118
 
-            bg.paste(
-                album,
-                (
-                    frame_x,
-                    frame_y,
-                ),
-                mask,
-            )
+            title = self.trim_text(song.title, self.font_title, 330)
+            artist = self.trim_text(song.channel_name, self.font_artist, 350)
 
-            draw.rounded_rectangle(
-                (
-                    frame_x,
-                    frame_y,
-                    frame_x + self.album_size,
-                    frame_y + self.album_size,
-                ),
-                radius=self.radius,
-                outline=(255, 255, 255, 90),
-                width=5,
-            )
-
-            text_x = 620
-
-            glass = Image.new(
-                "RGBA",
-                (
-                    self.width,
-                    self.height,
-                ),
-                (0, 0, 0, 0),
-            )
-
-            glass_draw = ImageDraw.Draw(glass)
-
-            glass_draw.rounded_rectangle(
-                (
-                    text_x - 40,
-                    frame_y,
-                    self.width - 60,
-                    frame_y + self.album_size,
-                ),
-                radius=35,
-                fill=(255, 255, 255, 25),
-            )
-
-            bg.alpha_composite(glass)
-
-            title = self.trim_text(
-                song.title,
-                self.font_title,
-                560,
-            )
-
-            artist = self.trim_text(
-                song.channel_name,
-                self.font_artist,
-                500,
-            )
-
+            draw.text((text_x, top_y), title, font=self.font_title, fill=(255, 255, 255, 255))
             draw.text(
-                (
-                    text_x,
-                    frame_y + 40,
-                ),
-                title,
-                font=self.font_title,
-                fill=(255, 255, 255),
-            )
-
-            draw.text(
-                (
-                    text_x,
-                    frame_y + 120,
-                ),
-                f"By {artist}",
+                (text_x, top_y + 50),
+                artist,
                 font=self.font_artist,
-                fill=(220, 220, 220),
+                fill=(200, 200, 200, 255),
             )
 
-            draw.text(
-                (
-                    text_x,
-                    frame_y + 185,
-                ),
-                f"Views : {song.view_count}",
-                font=self.font_small,
-                fill=(180, 180, 180),
-            )
-            # Progress Bar
+            # star + menu dots (top right) with gray circle backgrounds
+            star_c = (1068, 145)
+            dots_c = (1141, 145)
+            self.draw_icon_bg(draw, star_c, 26, fill=(210, 210, 210, 130))
+            self.draw_star(draw, star_c, 12, color=(255, 255, 255, 255))
+            self.draw_icon_bg(draw, dots_c, 26, fill=(230, 230, 230, 160))
+            self.draw_dots_menu(draw, dots_c, 26, color=(120, 120, 120, 255))
+
+            # ---------- progress bar ----------
+            bar_y = 224
             bar_x = text_x
-            bar_y = frame_y + 320
-            bar_width = 500
+            bar_width = right_edge - text_x
             bar_height = 8
 
             draw.rounded_rectangle(
-                (
-                    bar_x,
-                    bar_y,
-                    bar_x + bar_width,
-                    bar_y + bar_height,
-                ),
-                radius=5,
-                fill=(255, 255, 255, 50),
+                (bar_x, bar_y - bar_height / 2, bar_x + bar_width, bar_y + bar_height / 2),
+                radius=4,
+                fill=(255, 255, 255, 150),
             )
 
-            progress = 0.40
-
-            draw.rounded_rectangle(
-                (
-                    bar_x,
-                    bar_y,
-                    bar_x + (bar_width * progress),
-                    bar_y + bar_height,
-                ),
-                radius=5,
-                fill=(0, 200, 255, 255),
-            )
-
-            circle = 10
-
+            progress = 0.02
+            handle_r = 8
+            hx = bar_x + bar_width * progress
             draw.ellipse(
-                (
-                    bar_x + (bar_width * progress) - circle,
-                    bar_y - 6,
-                    bar_x + (bar_width * progress) + circle,
-                    bar_y + 14,
-                ),
-                fill=(255, 255, 255),
+                (hx - handle_r, bar_y - handle_r, hx + handle_r, bar_y + handle_r),
+                fill=(255, 255, 255, 255),
             )
 
             draw.text(
-                (
-                    bar_x,
-                    bar_y + 25,
-                ),
-                "00:01",
+                (bar_x, bar_y + 20),
+                "0:03",
                 font=self.font_small,
-                fill=(255, 255, 255),
+                fill=(210, 210, 210, 255),
             )
-
+            duration_text = f"-{song.duration}"
+            dur_w = self.font_small.getlength(duration_text)
             draw.text(
-                (
-                    bar_x + bar_width - 80,
-                    bar_y + 25,
-                ),
-                song.duration,
+                (bar_x + bar_width - dur_w, bar_y + 20),
+                duration_text,
                 font=self.font_small,
-                fill=(255, 255, 255),
+                fill=(210, 210, 210, 255),
             )
 
+            # ---------- playback controls ----------
+            controls_y = 380
+            center_x = 939
+
+            rewind_c = (center_x - 159, controls_y)
+            play_c = (center_x, controls_y)
+            forward_c = (center_x + 159, controls_y)
+
+            self.draw_skip_icon(draw, rewind_c, 62, forward=False)
+            self.draw_circle_button(draw, play_c, 29, filled=True)
+            self.draw_pause_bars(draw, play_c, 30)
+            self.draw_skip_icon(draw, forward_c, 62, forward=True)
+
+            # ---------- volume row ----------
+            vol_y = 498
+            self.draw_speaker(draw, (bar_x, vol_y), 28, loud=False)
+
+            vol_bar_x1 = bar_x + 55
+            vol_bar_x2 = right_edge - 55
+            draw.rounded_rectangle(
+                (vol_bar_x1, vol_y - 5, vol_bar_x2, vol_y + 5),
+                radius=5,
+                fill=(255, 255, 255, 235),
+            )
+            self.draw_speaker(draw, (right_edge - 28, vol_y), 28, loud=True)
+
+            # ---------- bottom icons ----------
+            icons_y = 582
+            self.draw_quote_bubble(draw, (835, icons_y), 36)
+            self.draw_list_icon(draw, (1042, icons_y), 36)
+
+            bg = Image.alpha_composite(bg, overlay)
             bg = bg.convert("RGB")
 
-            bg.save(
-                output,
-                quality=95,
-            )
+            bg.save(output, quality=95)
 
             try:
                 os.remove(temp)
