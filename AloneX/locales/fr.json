@@ -155,5 +155,7 @@
     "audio": "🎵Audio",
     "video": "🎥Video",
     "enabled": "Enabled",
-    "disabled": "Disabled"
+    "disabled": "Disabled",
+    "help_9": "Lecture automatique",
+    "help_autoplay": "<u><b>Commandes de lecture automatique:</b></u>\n<i>Continuez à jouer de la musique automatiquement lorsque la file d'attente est vide.</i>\n\n/autoplay: Affiche l'état actuel de la lecture automatique.\n/autoplay on: Active la lecture automatique — des chansons similaires seront jouées automatiquement.\n/autoplay off: Désactive la lecture automatique — la lecture s'arrêtera lorsque la file d'attente sera vide."
 }
