@@ -155,5 +155,7 @@
     "audio": "🎵Audio",
     "video": "🎥Video",
     "enabled": "Enabled",
-    "disabled": "Disabled"
+    "disabled": "Disabled",
+    "help_9": "Reprodução automática",
+    "help_autoplay": "<u><b>Comandos de reprodução automática:</b></u>\n<i>Continue tocando música automaticamente quando a fila estiver vazia.</i>\n\n/autoplay: Mostra o status atual da reprodução automática.\n/autoplay on: Ativa a reprodução automática — músicas relacionadas continuarão tocando automaticamente.\n/autoplay off: Desativa a reprodução automática — a reprodução para quando a fila estiver vazia."
 }
