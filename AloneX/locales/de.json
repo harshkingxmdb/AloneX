@@ -155,5 +155,7 @@
     "audio": "🎵Audio",
     "video": "🎥Video",
     "enabled": "Enabled",
-    "disabled": "Disabled"
+    "disabled": "Disabled",
+    "help_9": "Automatische Wiedergabe",
+    "help_autoplay": "<u><b>Befehle für automatische Wiedergabe:</b></u>\n<i>Musik automatisch weiterspielen, wenn die Warteschlange leer ist.</i>\n\n/autoplay: Zeigt den aktuellen Status der automatischen Wiedergabe an.\n/autoplay on: Aktiviert die automatische Wiedergabe — ähnliche Songs werden automatisch abgespielt.\n/autoplay off: Deaktiviert die automatische Wiedergabe — die Wiedergabe stoppt, wenn die Warteschlange leer ist."
 }
