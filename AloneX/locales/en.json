@@ -45,7 +45,7 @@
     "help_blist": "<u><b>Blacklist commands:</b></u>\n<i>Blacklisted chats and users cannot use the bot.</i>\n\n/blacklist [chat_id|user_id]: Add a chat/user to the blacklist.\n/unblacklist [chat_id|user_id]: Remove a chat/user from the blacklist",
     "help_lang": "<u><b>Language commands:</b></u>\n<i>This bot supports multiple languages.</i>\n\n/lang: Change the language of the bot.",
     "help_ping": "<u><b>Ping commands:</b></u>\n\n/help: Shows the help menu of the bot.\n\n/ping: Check the ping and memory usage of the bot.\n\n/start: Start the bot.\n\n/sudolist: Shows the list of sudo users of the bot.",
-    "help_play": "<u><b>Play commands:</b></u>\n<i>You can play music in the video chat using the following commands.</i>\n\n/play [song name/youtube url/reply to audio]: Play music in the video chat.\n/vplay [song name/youtube url/reply to video]: Play music video in the video chat.\n-f: Force play music in the video chat.\n-v: Plays music video in the video chat.\n\n<b>Example:</b> <code>/play -f -v attention</code>",
+    "help_play": "<u><b>Play commands:</b></u>\n<i>You can play music in the video chat using the following commands.</i>\n\n/play [song name/youtube url/reply to audio]: Play music in the video chat.\n/vplay [song name/youtube url/reply to video]: Play music video in the video chat.\n-f: Force play music in the video chat.\n-v: Plays music video in the video chat.\n\n<b>Example:</b> <code>/play -f -v attention</code>\n/autoplay [on/off]: Automatically keep playing related songs when the queue runs out.",
     "help_queue": "<u><b>Queue commands:</b></u>\n\n/queue: Shows the currently queued tracks in the queue.",
     "help_stats": "<u><b>Stats commands:</b></u>\n\n/stats: Shows the bot's stats.",
     "help_sudo": "<b><u>Sudo commands:</b></u>\n\n/ac: Shows the active calls count.\n\n/activevc: Shows the list of the active calls.\n\n/broadcast [reply to message]: Broadcasts the message to all the chats.\n-nochat: Excludes groups from the broadcast.\n-user: Include users in the broadcast.\n-copy: Removes the forwarded tag from the broadcast message.\n<b>Example:</b> <code>/broadcast -user -copy</code>\n\n/eval: Executes the given code.\n\n/logs: Sends the log file.\n\n/logger [on|off]: Enables/disables the logger.\n\n/restart: Restarts the bot.\n\n/addsudo: Add a user to the sudo users list.\n/rmsudo: Remove a user from the sudo users list.",
@@ -152,5 +152,13 @@
     "help_6": "𝐐ᴜᴇᴜᴇ",
     "help_7": "𝐒ᴛᴀᴛs",
     "help_8": "𝐒ᴜᴅᴏᴇʀs",
-    "help_close": "⌯ 𝐂ʟσsє ⌯"
+    "help_close": "⌯ 𝐂ʟσsє ⌯",
+    "autoplay_on": "Enabled",
+    "autoplay_off": "Disabled",
+    "autoplay_status": "Autoplay is currently: {0}",
+    "autoplay_enabled": "🎶 Autoplay has been enabled.\n\nWhen the queue runs out, I'll automatically keep playing related songs.",
+    "autoplay_disabled": "🚫 Autoplay has been disabled.\n\nPlayback will stop once the queue is empty.",
+    "autoplay_usage": "Usage: /autoplay [on|off]",
+    "help_9": "𝐀ᴜᴛᴏᴘʟᴀʏ",
+    "help_autoplay": "<u><b>Autoplay commands:</b></u>\n<i>Keep the music going automatically once the queue is empty.</i>\n\n/autoplay: Shows the current autoplay status.\n/autoplay on: Enables autoplay — related songs will keep playing automatically.\n/autoplay off: Disables autoplay — playback stops when the queue is empty."
 }
