@@ -155,5 +155,7 @@
     "audio": "🎵Audio",
     "video": "🎥Video",
     "enabled": "Enabled",
-    "disabled": "Disabled"
+    "disabled": "Disabled",
+    "help_9": "ਆਟੋਪਲੇ",
+    "help_autoplay": "<u><b>ਆਟੋਪਲੇ ਕਮਾਂਡਾਂ:</b></u>\n<i>ਕਤਾਰ ਖਾਲੀ ਹੋਣ 'ਤੇ ਸੰਗੀਤ ਨੂੰ ਆਪਣੇ ਆਪ ਚਲਾਉਂਦੇ ਰਹੋ।</i>\n\n/autoplay: ਮੌਜੂਦਾ ਆਟੋਪਲੇ ਸਥਿਤੀ ਦਿਖਾਉਂਦਾ ਹੈ।\n/autoplay on: ਆਟੋਪਲੇ ਚਾਲੂ ਕਰਦਾ ਹੈ — ਸਬੰਧਤ ਗੀਤ ਆਪਣੇ ਆਪ ਚੱਲਦੇ ਰਹਿਣਗੇ।\n/autoplay off: ਆਟੋਪਲੇ ਬੰਦ ਕਰਦਾ ਹੈ — ਕਤਾਰ ਖਾਲੀ ਹੋਣ 'ਤੇ ਪਲੇਬੈਕ ਰੁਕ ਜਾਵੇਗਾ।"
 }
