@@ -155,5 +155,7 @@
     "audio": "🎵Audio",
     "video": "🎥Video",
     "enabled": "Enabled",
-    "disabled": "Disabled"
+    "disabled": "Disabled",
+    "help_9": "オートプレイ",
+    "help_autoplay": "<u><b>オートプレイコマンド:</b></u>\n<i>キューが空になったら自動的に音楽を再生し続けます。</i>\n\n/autoplay: 現在のオートプレイの状態を表示します。\n/autoplay on: オートプレイを有効にします — 関連する曲が自動的に再生されます。\n/autoplay off: オートプレイを無効にします — キューが空になると再生が停止します。"
 }
