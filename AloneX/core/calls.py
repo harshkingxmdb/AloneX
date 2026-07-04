@@ -3,6 +3,8 @@
 # This file is part of AloneXMusic
 # ALONE-CODER
 
+from collections import defaultdict
+
 from ntgcalls import (ConnectionNotFound, TelegramServerError,
                       RTMPStreamingUnsupported)
 from pyrogram.errors import MessageIdInvalid
@@ -17,6 +19,7 @@ from AloneX.helpers import Media, Track, buttons, thumb
 class TgCall(PyTgCalls):
     def __init__(self):
         self.clients = []
+        self.history: dict[int, list[str]] = defaultdict(list)
 
     async def pause(self, chat_id: int) -> bool:
         client = await db.get_assistant(chat_id)
@@ -35,6 +38,8 @@ class TgCall(PyTgCalls):
             await db.remove_call(chat_id)
         except:
             pass
+
+        self.history.pop(chat_id, None)
 
         try:
             await client.leave_call(chat_id, close=False)
@@ -132,6 +137,12 @@ class TgCall(PyTgCalls):
 
 
     async def play_next(self, chat_id: int) -> None:
+        current = queue.get_current(chat_id)
+        if current:
+            history = self.history[chat_id]
+            history.append(current.id)
+            del history[:-20]
+
         media = queue.get_next(chat_id)
         try:
             if media.message_id:
@@ -145,7 +156,41 @@ class TgCall(PyTgCalls):
             pass
 
         if not media:
-            return await self.stop(chat_id)
+            if current and isinstance(current, Track) and await db.get_autoplay(chat_id):
+                _lang = await lang.get_lang(chat_id)
+                notice = await app.send_message(
+                    chat_id=chat_id,
+                    text=_lang.get(
+                        "autoplay_searching",
+                        "🔎 Queue is empty — Autoplay is searching for a related song...",
+                    ),
+                )
+                try:
+                    related = await yt.get_related(current, self.history[chat_id])
+                except Exception as e:
+                    logger.error(f"[Autoplay] Unexpected error for chat {chat_id}: {e}")
+                    related = None
+
+                try:
+                    await notice.delete()
+                except:
+                    pass
+
+                if related:
+                    related.user = "Autoplay"
+                    queue.add(chat_id, related)
+                    media = queue.get_current(chat_id)
+                else:
+                    await app.send_message(
+                        chat_id=chat_id,
+                        text=_lang.get(
+                            "autoplay_failed",
+                            "⚠️ Autoplay couldn't find a related song to play next, so the stream has ended.",
+                        ),
+                    )
+
+            if not media:
+                return await self.stop(chat_id)
 
         _lang = await lang.get_lang(chat_id)
         msg = await app.send_message(chat_id=chat_id, text=_lang["play_next"])
@@ -189,3 +234,4 @@ class TgCall(PyTgCalls):
             self.clients.append(client)
             await self.decorators(client)
         logger.info("PyTgCalls client(s) started.")
+      
