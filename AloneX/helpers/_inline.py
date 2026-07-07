@@ -81,7 +81,7 @@ class Inline:
         else:
             cbs = ["admins", "auth", "blist", "lang", "ping", "play", "queue", "stats", "sudo", "autoplay"]
             buttons = [
-                self.ikb(text=_lang[f"help_{i}"], callback_data=f"help {cb}", style=ButtonStyle.PRIMARY)
+                self.ikb(text=_lang[f"help_{i}"], callback_data=f"help {cb}", style=ButtonStyle.DANGER)
                 for i, cb in enumerate(cbs)
             ]
             rows = [buttons[i : i + 3] for i in range(0, len(buttons), 3)]
