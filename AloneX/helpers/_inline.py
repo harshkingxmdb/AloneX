@@ -180,23 +180,26 @@ class Inline:
                 )
             ],
             [self.ikb(text=lang["help"], callback_data="help", style=ButtonStyle.PRIMARY)],
-            [
-                self.ikb(text=lang["support"], url=config.SUPPORT_CHAT, style=ButtonStyle.SUCCESS),
-                self.ikb(text=lang["channel"], url=config.SUPPORT_CHANNEL, style=ButtonStyle.SUCCESS),
-            ],
         ]
         if private:
             rows += [
                 [
                     self.ikb(text=lang["aloneowner"], url=config.OWNER_USERNAME, style=ButtonStyle.DANGER),
+                    self.ikb(text=lang["channel"], url=config.SUPPORT_CHANNEL, style=ButtonStyle.SUCCESS),
                     self.ikb(
                         text=lang["source"],
                         url="https://github.com/TeamShonax/ShonaX", style=ButtonStyle.DANGER
-                    )
+                    ),
                 ]
             ]
         else:
-            rows += [[self.ikb(text=lang["language"], callback_data="language")]]
+            rows += [
+                [
+                    self.ikb(text=lang["support"], url=config.SUPPORT_CHAT, style=ButtonStyle.SUCCESS),
+                    self.ikb(text=lang["channel"], url=config.SUPPORT_CHANNEL, style=ButtonStyle.SUCCESS),
+                ],
+                [self.ikb(text=lang["language"], callback_data="language")],
+            ]
         return self.ikm(rows)
 
     def yt_key(self, link: str) -> types.InlineKeyboardMarkup:
