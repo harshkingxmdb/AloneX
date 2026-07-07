@@ -176,7 +176,7 @@ class Inline:
             [
                 self.ikb(
                     text=lang["add_me"],
-                    url=f"https://t.me/{app.username}?startgroup=true", style=ButtonStyle.PRIMARY
+                    url=f"https://t.me/{app.username}?startgroup=true", style=ButtonStyle.DANGER
                 )
             ],
             [self.ikb(text=lang["help"], callback_data="help", style=ButtonStyle.PRIMARY)],
@@ -184,19 +184,19 @@ class Inline:
         if private:
             rows += [
                 [
-                    self.ikb(text=lang["aloneowner"], url=config.OWNER_USERNAME, style=ButtonStyle.DANGER),
-                    self.ikb(text=lang["channel"], url=config.SUPPORT_CHANNEL, style=ButtonStyle.SUCCESS),
+                    self.ikb(text=lang["aloneowner"], url=config.OWNER_USERNAME, style=ButtonStyle.SUCCESS),
+                    self.ikb(text=lang["channel"], url=config.SUPPORT_CHANNEL, style=ButtonStyle.PRIMARY),
                     self.ikb(
                         text=lang["source"],
-                        url="https://github.com/TeamShonax/ShonaX", style=ButtonStyle.DANGER
+                        url="https://github.com/TeamShonax/ShonaX", style=ButtonStyle.SUCCESS
                     ),
                 ]
             ]
         else:
             rows += [
                 [
-                    self.ikb(text=lang["support"], url=config.SUPPORT_CHAT, style=ButtonStyle.SUCCESS),
-                    self.ikb(text=lang["channel"], url=config.SUPPORT_CHANNEL, style=ButtonStyle.SUCCESS),
+                    self.ikb(text=lang["support"], url=config.SUPPORT_CHAT, style=ButtonStyle.PRIMARY),
+                    self.ikb(text=lang["channel"], url=config.SUPPORT_CHANNEL, style=ButtonStyle.PRIMARY),
                 ],
                 [self.ikb(text=lang["language"], callback_data="language")],
             ]
