@@ -10,7 +10,9 @@ from ._inline import Inline
 from ._queue import Queue
 from ._thumbnails import Thumbnail
 from ._utilities import Utilities
+from ._vclogger import VCLogger
 
 buttons = Inline()
 thumb = Thumbnail()
 utils = Utilities()
+vclogger = VCLogger()
