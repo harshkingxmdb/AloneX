@@ -13,13 +13,15 @@ from pytgcalls import PyTgCalls, exceptions, types
 from pytgcalls.pytgcalls_session import PyTgCallsSession
 
 from AloneX import app, config, db, lang, logger, queue, userbot, yt
-from AloneX.helpers import Media, Track, buttons, thumb
+from AloneX.helpers import Media, Track, buttons, thumb, vclogger
 
 
 class TgCall(PyTgCalls):
     def __init__(self):
         self.clients = []
         self.history: dict[int, list[str]] = defaultdict(list)
+        self.pending_autoplay: dict[int, Track] = {}
+        self.autoplay_prefetching: set[int] = set()
 
     async def pause(self, chat_id: int) -> bool:
         client = await db.get_assistant(chat_id)
@@ -40,6 +42,9 @@ class TgCall(PyTgCalls):
             pass
 
         self.history.pop(chat_id, None)
+        self.pending_autoplay.pop(chat_id, None)
+        self.autoplay_prefetching.discard(chat_id)
+        vclogger.clear_chat(chat_id)
 
         try:
             await client.leave_call(chat_id, close=False)
@@ -143,6 +148,9 @@ class TgCall(PyTgCalls):
             history.append(current.id)
             del history[:-20]
 
+        # reset the prefetch guard now that this song's lifecycle has ended
+        self.autoplay_prefetching.discard(chat_id)
+
         media = queue.get_next(chat_id)
         try:
             if media.message_id:
@@ -158,23 +166,29 @@ class TgCall(PyTgCalls):
         if not media:
             if current and isinstance(current, Track) and await db.get_autoplay(chat_id):
                 _lang = await lang.get_lang(chat_id)
-                notice = await app.send_message(
-                    chat_id=chat_id,
-                    text=_lang.get(
-                        "autoplay_searching",
-                        "🔎 Queue is empty — Autoplay is searching for a related song...",
-                    ),
-                )
-                try:
-                    related = await yt.get_related(current, self.history[chat_id])
-                except Exception as e:
-                    logger.error(f"[Autoplay] Unexpected error for chat {chat_id}: {e}")
-                    related = None
 
-                try:
-                    await notice.delete()
-                except:
-                    pass
+                # fast path: a track was already searched & downloaded in the
+                # background (~30s before this song ended) — instant, no lag
+                related = self.pending_autoplay.pop(chat_id, None)
+
+                if not related:
+                    notice = await app.send_message(
+                        chat_id=chat_id,
+                        text=_lang.get(
+                            "autoplay_searching",
+                            "🔎 Queue is empty — Autoplay is searching for a related song...",
+                        ),
+                    )
+                    try:
+                        related = await yt.get_related(current, self.history[chat_id])
+                    except Exception as e:
+                        logger.error(f"[Autoplay] Unexpected error for chat {chat_id}: {e}")
+                        related = None
+
+                    try:
+                        await notice.delete()
+                    except:
+                        pass
 
                 if related:
                     related.user = "Autoplay"
@@ -212,6 +226,8 @@ class TgCall(PyTgCalls):
 
 
     async def decorators(self, client: PyTgCalls) -> None:
+        participant_update = getattr(types, "UpdatedGroupCallParticipant", None)
+
         @client.on_update()
         async def update_handler(_, update: types.Update) -> None:
             if isinstance(update, types.StreamEnded):
@@ -224,6 +240,28 @@ class TgCall(PyTgCalls):
                     types.ChatUpdate.Status.CLOSED_VOICE_CHAT,
                 ]:
                     await self.stop(update.chat_id)
+            elif participant_update and isinstance(update, participant_update):
+                try:
+                    if not await db.get_vc_logger(update.chat_id):
+                        return
+
+                    # `action` lives on the update itself; `user_id` lives on
+                    # update.participant. Fall back defensively in case this
+                    # differs across pytgcalls versions.
+                    action = getattr(update, "action", None)
+                    if action is None:
+                        action = getattr(update.participant, "action", None)
+
+                    user_id = getattr(update.participant, "user_id", None)
+                    if user_id is None:
+                        user_id = getattr(update, "user_id", None)
+
+                    if action == types.GroupCallParticipant.Action.JOINED:
+                        await vclogger.notify_join(update.chat_id, user_id)
+                    elif action == types.GroupCallParticipant.Action.LEFT:
+                        await vclogger.notify_leave(update.chat_id, user_id)
+                except Exception as e:
+                    logger.error(f"[VCLogger] Update handling error: {e}")
 
 
     async def boot(self) -> None:
@@ -234,4 +272,3 @@ class TgCall(PyTgCalls):
             self.clients.append(client)
             await self.decorators(client)
         logger.info("PyTgCalls client(s) started.")
-      
