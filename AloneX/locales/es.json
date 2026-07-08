@@ -157,5 +157,7 @@
     "enabled": "Enabled",
     "disabled": "Disabled",
     "help_9": "Reproducci贸n autom谩tica",
-    "help_autoplay": "<u><b>Comandos de reproducci贸n autom谩tica:</b></u>\n<i>Mant茅n la m煤sica sonando autom谩ticamente cuando la cola est茅 vac铆a.</i>\n\n/autoplay: Muestra el estado actual de la reproducci贸n autom谩tica.\n/autoplay on: Activa la reproducci贸n autom谩tica 鈥� se reproducir谩n canciones relacionadas autom谩ticamente.\n/autoplay off: Desactiva la reproducci贸n autom谩tica 鈥� la reproducci贸n se detendr谩 cuando la cola est茅 vac铆a."
+    "help_autoplay": "<u><b>Comandos de reproducci贸n autom谩tica:</b></u>\n<i>Mant茅n la m煤sica sonando autom谩ticamente cuando la cola est茅 vac铆a.</i>\n\n/autoplay: Muestra el estado actual de la reproducci贸n autom谩tica.\n/autoplay on: Activa la reproducci贸n autom谩tica 鈥� se reproducir谩n canciones relacionadas autom谩ticamente.\n/autoplay off: Desactiva la reproducci贸n autom谩tica 鈥� la reproducci贸n se detendr谩 cuando la cola est茅 vac铆a.",
+    "help_10": "Registro de VC",
+    "help_vclogger": "<u><b>Comandos de registro de VC:</b></u>\n<i>Rastrea qui茅n se une o abandona el chat de voz.</i>\n\n/vclogger: Muestra el estado actual.\n/vclogger on: Activa 鈥� env铆a un mensaje al unirse/salir.\n/vclogger off: Desactiva."
 }
