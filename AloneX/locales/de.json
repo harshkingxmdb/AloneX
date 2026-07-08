@@ -157,5 +157,7 @@
     "enabled": "Enabled",
     "disabled": "Disabled",
     "help_9": "Automatische Wiedergabe",
-    "help_autoplay": "<u><b>Befehle für automatische Wiedergabe:</b></u>\n<i>Musik automatisch weiterspielen, wenn die Warteschlange leer ist.</i>\n\n/autoplay: Zeigt den aktuellen Status der automatischen Wiedergabe an.\n/autoplay on: Aktiviert die automatische Wiedergabe — ähnliche Songs werden automatisch abgespielt.\n/autoplay off: Deaktiviert die automatische Wiedergabe — die Wiedergabe stoppt, wenn die Warteschlange leer ist."
+    "help_autoplay": "<u><b>Befehle für automatische Wiedergabe:</b></u>\n<i>Musik automatisch weiterspielen, wenn die Warteschlange leer ist.</i>\n\n/autoplay: Zeigt den aktuellen Status der automatischen Wiedergabe an.\n/autoplay on: Aktiviert die automatische Wiedergabe — ähnliche Songs werden automatisch abgespielt.\n/autoplay off: Deaktiviert die automatische Wiedergabe — die Wiedergabe stoppt, wenn die Warteschlange leer ist.",
+    "help_10": "VC-Protokoll",
+    "help_vclogger": "<u><b>VC-Protokoll-Befehle:</b></u>\n<i>Verfolgen Sie, wer dem Sprachchat beitritt/ihn verlässt.</i>\n\n/vclogger: Zeigt den aktuellen Status an.\n/vclogger on: Aktiviert — sendet eine Nachricht beim Beitritt/Verlassen.\n/vclogger off: Deaktiviert."
 }
