@@ -41,21 +41,20 @@ class Inline:
                     self.ikb(text="▢", callback_data=f"controls stop {chat_id}", style=ButtonStyle.DANGER),
                 ]
             )
+            keyboard.append(
+                [
+                    self.ikb(text="≪ -20s", callback_data=f"controls seek_back {chat_id}", style=ButtonStyle.PRIMARY),
+                    self.ikb(text="🔄", callback_data=f"controls replay {chat_id}", style=ButtonStyle.PRIMARY),
+                    self.ikb(text="+20s ≫", callback_data=f"controls seek_fwd {chat_id}", style=ButtonStyle.PRIMARY),
+                ]
+            )
             if not _lang:
                 _lang = lang.languages["en"]
             keyboard.append(
                 [
                     self.ikb(
-                        text=_lang.get("add_me", "✙ 𝐀ᴅᴅ 𝐌є 𝐈η 𝐘συʀ 𝐆ʀσυᴘ ✙"),                        url=f"https://t.me/{app.username}?startgroup=true",
-                        style=ButtonStyle.PRIMARY,
-                    ),
-                ]
-            )
-            keyboard.append(
-                [
-                    self.ikb(
-                        text=_lang.get("channel", "˹ 𝐔ᴘᴅᴧᴛєs ˼"),
-                        url=config.SUPPORT_CHANNEL,
+                        text="➕ Add Me",
+                        url=f"https://t.me/{app.username}?startgroup=true",
                         style=ButtonStyle.SUCCESS,
                     ),
                     self.ikb(
@@ -75,11 +74,12 @@ class Inline:
             rows = [
                 [
                     self.ikb(text=_lang["back"], callback_data="help back", style=ButtonStyle.PRIMARY),
+                    self.ikb(text=_lang.get("home_btn", "🏠 Home"), callback_data="help home", style=ButtonStyle.SUCCESS),
                     self.ikb(text=_lang["close"], callback_data="help close", style=ButtonStyle.DANGER),
                 ]
             ]
         else:
-            cbs = ["admins", "auth", "blist", "lang", "ping", "play", "queue", "stats", "sudo", "autoplay"]
+            cbs = ["admins", "auth", "blist", "lang", "ping", "play", "queue", "stats", "sudo", "autoplay", "vclogger"]
             buttons = [
                 self.ikb(text=_lang[f"help_{i}"], callback_data=f"help {cb}", style=ButtonStyle.PRIMARY)
                 for i, cb in enumerate(cbs)
@@ -87,7 +87,7 @@ class Inline:
             rows = [buttons[i : i + 3] for i in range(0, len(buttons), 3)]
             rows.append(
                 [
-                    self.ikb(text=_lang["back"], callback_data="help_back_start", style=ButtonStyle.PRIMARY),
+                    self.ikb(text=_lang.get("home_btn", "🏠 Home"), callback_data="help home", style=ButtonStyle.SUCCESS),
                     self.ikb(text=_lang["close"], callback_data="help close", style=ButtonStyle.DANGER),
                 ]
             )
@@ -185,7 +185,7 @@ class Inline:
             rows += [
                 [
                     self.ikb(text=lang["aloneowner"], url=config.OWNER_USERNAME, style=ButtonStyle.SUCCESS),
-                    self.ikb(text=lang["channel"], url=config.SUPPORT_CHANNEL, style=ButtonStyle.PRIMARY),
+                    self.ikb(text=lang["channel"], url=config.SUPPORT_CHANNEL, style=ButtonStyle.SUCCESS),
                     self.ikb(
                         text=lang["source"],
                         url="https://github.com/TeamShonax/ShonaX", style=ButtonStyle.SUCCESS
@@ -195,8 +195,8 @@ class Inline:
         else:
             rows += [
                 [
-                    self.ikb(text=lang["support"], url=config.SUPPORT_CHAT, style=ButtonStyle.PRIMARY),
-                    self.ikb(text=lang["channel"], url=config.SUPPORT_CHANNEL, style=ButtonStyle.PRIMARY),
+                    self.ikb(text=lang["support"], url=config.SUPPORT_CHAT, style=ButtonStyle.SUCCESS),
+                    self.ikb(text=lang["channel"], url=config.SUPPORT_CHANNEL, style=ButtonStyle.SUCCESS),
                 ],
                 [self.ikb(text=lang["language"], callback_data="language")],
             ]
@@ -210,4 +210,4 @@ class Inline:
                     self.ikb(text="Youtube", url=link),
                 ],
             ]
-        )
+    )
