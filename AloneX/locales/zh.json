@@ -157,5 +157,7 @@
     "enabled": "Enabled",
     "disabled": "Disabled",
     "help_9": "自动播放",
-    "help_autoplay": "<u><b>自动播放命令:</b></u>\n<i>当队列为空时自动继续播放音乐。</i>\n\n/autoplay: 显示当前自动播放状态。\n/autoplay on: 启用自动播放 — 将自动播放相关歌曲。\n/autoplay off: 禁用自动播放 — 队列为空时播放将停止。"
+    "help_autoplay": "<u><b>自动播放命令:</b></u>\n<i>当队列为空时自动继续播放音乐。</i>\n\n/autoplay: 显示当前自动播放状态。\n/autoplay on: 启用自动播放 — 将自动播放相关歌曲。\n/autoplay off: 禁用自动播放 — 队列为空时播放将停止。",
+    "help_10": "语音记录",
+    "help_vclogger": "<u><b>语音记录命令:</b></u>\n<i>跟踪谁加入/离开语音聊天。</i>\n\n/vclogger: 显示当前状态。\n/vclogger on: 启用 — 加入/离开时发送消息。\n/vclogger off: 禁用。"
 }
