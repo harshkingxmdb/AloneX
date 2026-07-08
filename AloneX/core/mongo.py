@@ -23,6 +23,7 @@ class MongoDB:
         self.active_calls = {}
         self.admin_play = []
         self.autoplay = []
+        self.vc_logger = []
         self.blacklisted = []
         self.cmd_delete = []
         self.notified = []
@@ -277,6 +278,25 @@ class MongoDB:
         await self.chatsdb.update_one(
             {"_id": chat_id},
             {"$set": {"autoplay": enable}},
+            upsert=True,
+        )
+
+    # VC LOGGER METHODS
+    async def get_vc_logger(self, chat_id: int) -> bool:
+        if chat_id not in self.vc_logger:
+            doc = await self.chatsdb.find_one({"_id": chat_id})
+            if doc and doc.get("vc_logger"):
+                self.vc_logger.append(chat_id)
+        return chat_id in self.vc_logger
+
+    async def set_vc_logger(self, chat_id: int, enable: bool) -> None:
+        if enable and chat_id not in self.vc_logger:
+            self.vc_logger.append(chat_id)
+        elif not enable and chat_id in self.vc_logger:
+            self.vc_logger.remove(chat_id)
+        await self.chatsdb.update_one(
+            {"_id": chat_id},
+            {"$set": {"vc_logger": enable}},
             upsert=True,
         )
 
