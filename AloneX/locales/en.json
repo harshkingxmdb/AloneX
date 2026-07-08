@@ -156,9 +156,20 @@
     "autoplay_on": "Enabled",
     "autoplay_off": "Disabled",
     "autoplay_status": "Autoplay is currently: {0}",
-    "autoplay_enabled": "🎶 Autoplay has been enabled.\n\nWhen the queue runs out, I'll automatically keep playing related songs.",
-    "autoplay_disabled": "🚫 Autoplay has been disabled.\n\nPlayback will stop once the queue is empty.",
+    "autoplay_enabled": "🎶 Autoplay enabled.",
+    "autoplay_disabled": "🚫 Autoplay disabled.",
     "autoplay_usage": "Usage: /autoplay [on|off]",
     "help_9": "𝐀ᴜᴛᴏᴘʟᴀʏ",
-    "help_autoplay": "<u><b>Autoplay commands:</b></u>\n<i>Keep the music going automatically once the queue is empty.</i>\n\n/autoplay: Shows the current autoplay status.\n/autoplay on: Enables autoplay — related songs will keep playing automatically.\n/autoplay off: Disables autoplay — playback stops when the queue is empty."
+    "help_autoplay": "<u><b>Autoplay commands:</b></u>\n<i>Keep the music going automatically once the queue is empty.</i>\n\n/autoplay: Shows the current autoplay status.\n/autoplay on: Enables autoplay — related songs will keep playing automatically.\n/autoplay off: Disables autoplay — playback stops when the queue is empty.",
+    "autoplay_searching": "🔎 Queue is empty — Autoplay is searching for a related song...",
+    "autoplay_failed": "⚠️ Autoplay couldn't find a related song to play next, so the stream has ended.",
+    "vclogger_on": "Enabled",
+    "vclogger_off": "Disabled",
+    "vclogger_status": "VC Logger is currently: {0}",
+    "vclogger_enabled": "✅ VC Logger enabled.",
+    "vclogger_disabled": "🚫 VC Logger disabled.",
+    "vclogger_usage": "Usage: /vclogger [on|off]",
+    "help_10": "𝐕ᴄ Lᴏɢɢᴇʀ",
+    "help_vclogger": "<u><b>VC Logger commands:</b></u>\n<i>Track who joins/leaves the video chat.</i>\n\n/vclogger: Shows the current VC logger status.\n/vclogger on: Enables VC logger — posts a message on join/leave.\n/vclogger off: Disables VC logger.",
+    "home_btn": "🏠 Home"
 }
