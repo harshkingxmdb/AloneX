@@ -127,6 +127,8 @@ async def _help(_, query: types.CallbackQuery):
         return await query.edit_message_text(
             text=query.lang["help_menu"], reply_markup=buttons.help_markup(query.lang)
         )
+    elif data[1] == "home":
+        return await query.answer(url=f"https://t.me/{app.username}?start=home")
     elif data[1] == "close":
         try:
             await query.message.delete()
@@ -168,4 +170,4 @@ async def _settings_cb(_, query: types.CallbackQuery):
             _language,
             chat_id,
         )
-    )
+        )
