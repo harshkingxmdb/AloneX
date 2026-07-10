@@ -1,4 +1,4 @@
-# FIX BY SHONA @THECDERQUEEN
+# FIXED BY SHONA
 import os
 import re
 import asyncio
@@ -9,79 +9,8 @@ from py_yt import VideosSearch, Playlist
 from AloneX import logger, config
 from AloneX.helpers import Track, utils
 
-API_URL = os.environ.get("SHRUTI_API_URL", "https://api.shrutibots.site")
-
-API_KEY = os.environ.get("SHRUTI_API_KEY", "ShrutiBotsbNn7OBwod2NR0aH88nXR") ## Get This API KEY FROM TELEGRAM BOT USERNAME: @SHRUTIAPIBOT
-
+API_URL = "https://teaminflex.xyz"
 DOWNLOAD_DIR = "downloads"
-
-
-async def download_song(link: str) -> str:
-    video_id = link.split("v=")[-1].split("&")[0] if "v=" in link else link
-    if not video_id or len(video_id) < 3:
-        return None
-
-    os.makedirs(DOWNLOAD_DIR, exist_ok=True)
-    file_path = os.path.join(DOWNLOAD_DIR, f"{video_id}.mp3")
-    if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-        return file_path
-
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                f"{API_URL}/download",
-                params={"url": video_id, "type": "audio", "api_key": API_KEY},
-                timeout=aiohttp.ClientTimeout(total=300)
-            ) as resp:
-                if resp.status != 200:
-                    return None
-                with open(file_path, "wb") as f:
-                    async for chunk in resp.content.iter_chunked(131072):
-                        f.write(chunk)
-        if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-            return file_path
-        return None
-    except Exception:
-        if os.path.exists(file_path):
-            try:
-                os.remove(file_path)
-            except Exception:
-                pass
-        return None
-
-
-async def download_video(link: str) -> str:
-    video_id = link.split("v=")[-1].split("&")[0] if "v=" in link else link
-    if not video_id or len(video_id) < 3:
-        return None
-
-    os.makedirs(DOWNLOAD_DIR, exist_ok=True)
-    file_path = os.path.join(DOWNLOAD_DIR, f"{video_id}.mp4")
-    if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-        return file_path
-
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                f"{API_URL}/download",
-                params={"url": video_id, "type": "video", "api_key": API_KEY},
-                timeout=aiohttp.ClientTimeout(total=600)
-            ) as resp:
-                if resp.status != 200:
-                    return None
-                with open(file_path, "wb") as f:
-                    async for chunk in resp.content.iter_chunked(131072):
-                        f.write(chunk)
-        if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-            return file_path
-        return None
-    except Exception:
-        if os.path.exists(file_path):
-            try:
-                os.remove(file_path)
-            except Exception:
-                pass
-        return None
 
 
 class YouTube:
@@ -93,6 +22,8 @@ class YouTube:
             r"([A-Za-z0-9_-]{11}|PL[A-Za-z0-9_-]+)([&?][^\s]*)?"
         )
         self.cookie_dir = "AloneX/cookies"
+
+    # ---------------- cookies ----------------
 
     def get_cookies(self):
         if not os.path.exists(self.cookie_dir):
@@ -115,6 +46,8 @@ class YouTube:
                     with open(path, "wb") as fw:
                         fw.write(await resp.read())
         logger.info(f"Cookies saved in {self.cookie_dir}.")
+
+    # ---------------- basic helpers ----------------
 
     def valid(self, url: str) -> bool:
         return bool(re.match(self.regex, url))
@@ -163,14 +96,62 @@ class YouTube:
             logger.error(f"Playlist error: {e}")
         return tracks
 
+    # ---------------- download (teaminflex.xyz API) ----------------
+
     async def download(self, video_id: str, video: bool = False) -> str | None:
         if not video_id or len(video_id) < 3:
             return None
 
-        if video:
-            return await download_video(video_id)
-        else:
-            return await download_song(video_id)
+        os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+        ext = "mkv" if video else "webm"
+        file_path = os.path.join(DOWNLOAD_DIR, f"{video_id}.{ext}")
+
+        if os.path.exists(file_path):
+            return file_path
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                payload = {"url": video_id, "type": "video" if video else "audio"}
+                headers = {
+                    "Content-Type": "application/json",
+                    "X-API-KEY": config.YOUTUBE_API_KEY
+                }
+
+                # Step 1: Trigger API
+                async with session.post(f"{API_URL}/download", json=payload, headers=headers) as response:
+                    if response.status == 401:
+                        logger.error("[API] Invalid API key")
+                        return None
+                    if response.status != 200:
+                        logger.error(f"[API] returned {response.status}")
+                        return None
+
+                    data = await response.json()
+                    if data.get("status") != "success" or not data.get("download_url"):
+                        logger.error(f"[API] response error: {data}")
+                        return None
+
+                    download_link = f"{API_URL}{data['download_url']}"
+
+                # Step 2: Download file
+                async with session.get(download_link) as file_response:
+                    if file_response.status != 200:
+                        logger.error(f"[API] Download failed ({file_response.status})")
+                        return None
+                    with open(file_path, "wb") as f:
+                        async for chunk in file_response.content.iter_chunked(8192):
+                            f.write(chunk)
+
+            if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+                return file_path
+        except Exception as e:
+            logger.error(f"Download exception for ID {video_id}: {e}")
+            if os.path.exists(file_path):
+                try: os.remove(file_path)
+                except: pass
+        return None
+
+    # ---------------- autoplay helpers ----------------
 
     def _format_duration(self, seconds: int) -> str:
         seconds = max(int(seconds or 0), 0)
