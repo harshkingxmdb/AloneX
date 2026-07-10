@@ -14,7 +14,7 @@ async def _vc_invited(_, message: types.Message):
 
     for user in message.video_chat_members_invited.users:
         try:
-            invited.append(f"[{user.first_name}](tg://user?id={user.id})")
+            invited.append(f'<a href="tg://user?id={user.id}">{user.first_name}</a>')
         except Exception:
             pass
 
