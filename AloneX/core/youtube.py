@@ -1,4 +1,4 @@
-# FIXED BY SHONA
+# FIX BY SHONA 
 import os
 import re
 import asyncio
@@ -21,31 +21,6 @@ class YouTube:
             r"(youtube\.com/(watch\?v=|shorts/|playlist\?list=)|youtu\.be/)"
             r"([A-Za-z0-9_-]{11}|PL[A-Za-z0-9_-]+)([&?][^\s]*)?"
         )
-        self.cookie_dir = "AloneX/cookies"
-
-    # ---------------- cookies ----------------
-
-    def get_cookies(self):
-        if not os.path.exists(self.cookie_dir):
-            return None
-        cookies_files = [f for f in os.listdir(self.cookie_dir) if f.endswith(".txt")]
-        if not cookies_files:
-            return None
-        return os.path.join(self.cookie_dir, random.choice(cookies_files))
-
-    async def save_cookies(self, urls: list[str]) -> None:
-        logger.info("Saving cookies from urls...")
-        if not os.path.exists(self.cookie_dir):
-            os.makedirs(self.cookie_dir)
-        async with aiohttp.ClientSession() as session:
-            for i, url in enumerate(urls):
-                path = f"{self.cookie_dir}/cookie_{i}.txt"
-                link = "https://batbin.me/api/v2/paste/" + url.split("/")[-1]
-                async with session.get(link) as resp:
-                    resp.raise_for_status()
-                    with open(path, "wb") as fw:
-                        fw.write(await resp.read())
-        logger.info(f"Cookies saved in {self.cookie_dir}.")
 
     # ---------------- basic helpers ----------------
 
@@ -109,46 +84,93 @@ class YouTube:
         if os.path.exists(file_path):
             return file_path
 
-        try:
-            async with aiohttp.ClientSession() as session:
-                payload = {"url": video_id, "type": "video" if video else "audio"}
-                headers = {
-                    "Content-Type": "application/json",
-                    "X-API-KEY": config.YOUTUBE_API_KEY
-                }
+        max_retries = 2
+        retry_delay = 1  # seconds, flat delay — keep response fast
+        transient_statuses = {502, 503, 504}
 
-                # Step 1: Trigger API
-                async with session.post(f"{API_URL}/download", json=payload, headers=headers) as response:
-                    if response.status == 401:
-                        logger.error("[API] Invalid API key")
-                        return None
-                    if response.status != 200:
-                        logger.error(f"[API] returned {response.status}")
-                        return None
+        for attempt in range(1, max_retries + 1):
+            try:
+                async with aiohttp.ClientSession(
+                    timeout=aiohttp.ClientTimeout(total=60)
+                ) as session:
+                    payload = {"url": video_id, "type": "video" if video else "audio"}
+                    headers = {
+                        "Content-Type": "application/json",
+                        "X-API-KEY": config.YOUTUBE_API_KEY
+                    }
 
-                    data = await response.json()
-                    if data.get("status") != "success" or not data.get("download_url"):
-                        logger.error(f"[API] response error: {data}")
-                        return None
+                    # Step 1: Trigger API
+                    async with session.post(f"{API_URL}/download", json=payload, headers=headers) as response:
+                        if response.status == 401:
+                            logger.error("[API] Invalid API key")
+                            return None
 
-                    download_link = f"{API_URL}{data['download_url']}"
+                        if response.status in transient_statuses:
+                            logger.warning(
+                                f"[API] returned {response.status} (attempt {attempt}/{max_retries}) for {video_id}"
+                            )
+                            if attempt < max_retries:
+                                await asyncio.sleep(retry_delay)
+                                continue
+                            logger.error(f"[API] gave up after {max_retries} attempts for {video_id}")
+                            return None
 
-                # Step 2: Download file
-                async with session.get(download_link) as file_response:
-                    if file_response.status != 200:
-                        logger.error(f"[API] Download failed ({file_response.status})")
-                        return None
-                    with open(file_path, "wb") as f:
-                        async for chunk in file_response.content.iter_chunked(8192):
-                            f.write(chunk)
+                        if response.status != 200:
+                            logger.error(f"[API] returned {response.status}")
+                            return None
 
-            if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-                return file_path
-        except Exception as e:
-            logger.error(f"Download exception for ID {video_id}: {e}")
-            if os.path.exists(file_path):
-                try: os.remove(file_path)
-                except: pass
+                        data = await response.json()
+                        if data.get("status") != "success" or not data.get("download_url"):
+                            logger.error(f"[API] response error: {data}")
+                            return None
+
+                        download_link = f"{API_URL}{data['download_url']}"
+
+                    # Step 2: Download file
+                    async with session.get(download_link) as file_response:
+                        if file_response.status in transient_statuses:
+                            logger.warning(
+                                f"[API] file download returned {file_response.status} (attempt {attempt}/{max_retries}) for {video_id}"
+                            )
+                            if attempt < max_retries:
+                                await asyncio.sleep(retry_delay)
+                                continue
+                            logger.error(f"[API] gave up after {max_retries} attempts for {video_id}")
+                            return None
+
+                        if file_response.status != 200:
+                            logger.error(f"[API] Download failed ({file_response.status})")
+                            return None
+
+                        with open(file_path, "wb") as f:
+                            async for chunk in file_response.content.iter_chunked(8192):
+                                f.write(chunk)
+
+                if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+                    return file_path
+
+                return None
+
+            except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+                logger.warning(
+                    f"[API] network error (attempt {attempt}/{max_retries}) for {video_id}: {e}"
+                )
+                if os.path.exists(file_path):
+                    try: os.remove(file_path)
+                    except: pass
+                if attempt < max_retries:
+                    await asyncio.sleep(retry_delay)
+                    continue
+                logger.error(f"[API] gave up after {max_retries} attempts for {video_id}: {e}")
+                return None
+
+            except Exception as e:
+                logger.error(f"Download exception for ID {video_id}: {e}")
+                if os.path.exists(file_path):
+                    try: os.remove(file_path)
+                    except: pass
+                return None
+
         return None
 
     # ---------------- autoplay helpers ----------------
