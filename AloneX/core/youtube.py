@@ -1,9 +1,7 @@
-# FIX BY SHONA 
 import os
 import re
 import asyncio
 import aiohttp
-import random
 import yt_dlp
 from py_yt import VideosSearch, Playlist
 from AloneX import logger, config
@@ -84,7 +82,7 @@ class YouTube:
         if os.path.exists(file_path):
             return file_path
 
-        max_retries = 2
+        max_retries = 3
         retry_delay = 1  # seconds, flat delay — keep response fast
         transient_statuses = {502, 503, 504}
 
@@ -119,9 +117,23 @@ class YouTube:
                             logger.error(f"[API] returned {response.status}")
                             return None
 
-                        data = await response.json()
+                        try:
+                            data = await response.json()
+                        except Exception as e:
+                            logger.warning(
+                                f"[API] invalid JSON response (attempt {attempt}/{max_retries}) for {video_id}: {e}"
+                            )
+                            if attempt < max_retries:
+                                await asyncio.sleep(retry_delay)
+                                continue
+                            logger.error(f"[API] gave up after {max_retries} attempts for {video_id}")
+                            return None
+
                         if data.get("status") != "success" or not data.get("download_url"):
                             logger.error(f"[API] response error: {data}")
+                            if attempt < max_retries:
+                                await asyncio.sleep(retry_delay)
+                                continue
                             return None
 
                         download_link = f"{API_URL}{data['download_url']}"
@@ -140,6 +152,9 @@ class YouTube:
 
                         if file_response.status != 200:
                             logger.error(f"[API] Download failed ({file_response.status})")
+                            if attempt < max_retries:
+                                await asyncio.sleep(retry_delay)
+                                continue
                             return None
 
                         with open(file_path, "wb") as f:
@@ -149,6 +164,20 @@ class YouTube:
                 if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
                     return file_path
 
+                # File ended up missing/empty despite a "successful" response —
+                # retry instead of silently giving up so transient glitches
+                # (connection reset mid-download, truncated body, etc.) don't
+                # cause a false "download failed" on the first blip.
+                logger.warning(
+                    f"[API] downloaded file was empty/missing (attempt {attempt}/{max_retries}) for {video_id}"
+                )
+                if os.path.exists(file_path):
+                    try: os.remove(file_path)
+                    except: pass
+                if attempt < max_retries:
+                    await asyncio.sleep(retry_delay)
+                    continue
+                logger.error(f"[API] gave up after {max_retries} attempts for {video_id}: file kept coming back empty")
                 return None
 
             except (aiohttp.ClientError, asyncio.TimeoutError) as e:
@@ -165,10 +194,13 @@ class YouTube:
                 return None
 
             except Exception as e:
-                logger.error(f"Download exception for ID {video_id}: {e}")
+                logger.error(f"Download exception for ID {video_id} (attempt {attempt}/{max_retries}): {e}")
                 if os.path.exists(file_path):
                     try: os.remove(file_path)
                     except: pass
+                if attempt < max_retries:
+                    await asyncio.sleep(retry_delay)
+                    continue
                 return None
 
         return None
@@ -206,10 +238,6 @@ class YouTube:
             "extractor_retries": 1,
             "extractor_args": {"youtube": {"player_client": ["android"]}},
         }
-        cookie = self.get_cookies()
-        if cookie:
-            opts["cookiefile"] = cookie
-
         url = f"https://www.youtube.com/watch?v={video_id}&list=RD{video_id}"
         with yt_dlp.YoutubeDL(opts) as ydl:
             return ydl.extract_info(url, download=False)
@@ -268,7 +296,7 @@ class YouTube:
         self, current: Track, played: set[str]
     ) -> Track | None:
         """Fallback used when YouTube blocks the mix-playlist scrape (common on
-        server/cloud IPs without cookies). Reuses the same search backend that
+        server/cloud IPs). Reuses the same search backend that
         already powers /play, so it works wherever normal search works."""
         queries = []
         if current.channel_name:
@@ -314,7 +342,7 @@ class YouTube:
         """Fetch the next autoplay track, skipping anything already played in
         this session. Tries YouTube's related mix first, falling back to a
         text search (same backend as /play) if the mix is blocked or empty —
-        this is common on server/cloud IPs without YouTube cookies set."""
+        this is common on server/cloud IPs."""
         if not current or not current.id:
             return None
 
