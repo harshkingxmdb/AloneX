@@ -13,6 +13,49 @@ class Inline:
     def cancel_dl(self, text) -> types.InlineKeyboardMarkup:
         return self.ikm([[self.ikb(text=text, callback_data=f"cancel_dl")]])
 
+    def autoplay_markup(self, _lang: dict) -> types.InlineKeyboardMarkup:
+        return self.ikm(
+            [
+                [
+                    self.ikb(
+                        text=_lang.get("autoplay_panel_enable_btn", "Enable Autoplay"),
+                        callback_data="autoplay_panel enable",
+                        style=ButtonStyle.SUCCESS,
+                    )
+                ],
+                [
+                    self.ikb(
+                        text=_lang.get("autoplay_panel_info_btn", "Info"),
+                        callback_data="autoplay_panel info",
+                        style=ButtonStyle.PRIMARY,
+                    ),
+                    self.ikb(
+                        text=_lang.get("close", "⌯ 𝐂ʟσsє ⌯"),
+                        callback_data="autoplay_panel close",
+                        style=ButtonStyle.DANGER,
+                    ),
+                ],
+            ]
+        )
+
+    def autoplay_info_markup(self, _lang: dict) -> types.InlineKeyboardMarkup:
+        return self.ikm(
+            [
+                [
+                    self.ikb(
+                        text=_lang.get("back", "𝐁ᴀᴄᴋ"),
+                        callback_data="autoplay_panel back",
+                        style=ButtonStyle.PRIMARY,
+                    ),
+                    self.ikb(
+                        text=_lang.get("close", "⌯ 𝐂ʟσsє ⌯"),
+                        callback_data="autoplay_panel close",
+                        style=ButtonStyle.DANGER,
+                    ),
+                ],
+            ]
+        )
+
     def controls(
         self,
         chat_id: int,
@@ -210,4 +253,4 @@ class Inline:
                     self.ikb(text="Youtube", url=link),
                 ],
             ]
-    )
+                    )
