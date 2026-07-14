@@ -8,7 +8,7 @@ import time
 
 from pyrogram import enums, errors, filters, types
 
-from AloneX import anon, app, config, db, lang, queue, tasks, userbot, yt
+from AloneX import anon, app, config, db, lang, logger, queue, tasks, userbot, yt
 from AloneX.helpers import buttons
 
 
@@ -30,14 +30,30 @@ async def auto_leave():
                         break
                     if chat_id in [app.logger, -1001686672798, -1001549206010]:
                         continue
-                    if dialog.chat.type in [
+                    if dialog.chat.type not in [
                         enums.ChatType.GROUP,
                         enums.ChatType.SUPERGROUP,
                     ]:
-                        if chat_id in db.active_calls:
-                            continue
-                        await ub.leave_chat(chat_id)
-                        left += 1
+                        continue
+                    if chat_id in db.active_calls:
+                        continue
+
+                    # keep the assistant only where the bot itself is an admin;
+                    # leave everywhere else (bot not admin, or not even present)
+                    try:
+                        member = await app.get_chat_member(chat_id, app.id)
+                        bot_is_admin = member.status in (
+                            enums.ChatMemberStatus.ADMINISTRATOR,
+                            enums.ChatMemberStatus.OWNER,
+                        )
+                    except Exception:
+                        bot_is_admin = False
+
+                    if bot_is_admin:
+                        continue
+
+                    await ub.leave_chat(chat_id)
+                    left += 1
                     await asyncio.sleep(5)
             except:
                 continue
@@ -75,6 +91,25 @@ async def update_timer(length=10):
                     next = queue.get_next(chat_id, check=True)
                     if next and not next.file_path:
                         next.file_path = await yt.download(next.id, video=next.video)
+                    elif (
+                        not next
+                        and chat_id not in anon.autoplay_prefetching
+                        and chat_id not in anon.pending_autoplay
+                        and await db.get_autoplay(chat_id)
+                    ):
+                        anon.autoplay_prefetching.add(chat_id)
+                        try:
+                            related = await yt.get_related(media, anon.history[chat_id])
+                            if related:
+                                related.file_path = await yt.download(
+                                    related.id, video=related.video
+                                )
+                                if related.file_path:
+                                    anon.pending_autoplay[chat_id] = related
+                        except Exception as e:
+                            logger.error(
+                                f"[Autoplay] Prefetch failed for chat {chat_id}: {e}"
+                            )
 
                 if remaining < 10:
                     remove = True
