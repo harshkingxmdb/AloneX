@@ -4,6 +4,7 @@
 
 
 import re
+import asyncio
 
 from pyrogram import filters, types
 
@@ -90,6 +91,30 @@ async def _controls(_, query: types.CallbackQuery):
         status = query.lang["replayed"]
         reply = query.lang["play_replayed"].format(user)
 
+    elif action in ("seek_fwd", "seek_back"):
+        media = queue.get_current(chat_id)
+        if not media or not media.duration_sec:
+            return await query.answer(query.lang["play_seek_no_dur"], show_alert=True)
+
+        to_seek = 20
+        if action == "seek_back":
+            start_from = media.time - to_seek
+            if start_from < 1:
+                start_from = 1
+            stype = query.lang["backward"]
+        else:
+            start_from = media.time + to_seek
+            if start_from + 10 > media.duration_sec:
+                start_from = media.duration_sec - 5
+            stype = query.lang["forward"]
+
+        sent = await app.send_message(chat_id=chat_id, text=query.lang["play_seeking"])
+        await anon.play_media(chat_id, sent, media, start_from)
+        media.time = start_from
+        return await sent.edit_text(
+            query.lang["play_seeked"].format(stype, start_from, user)
+        )
+
     elif action == "stop":
         await anon.stop(chat_id)
         status = query.lang["stopped"]
@@ -170,4 +195,71 @@ async def _settings_cb(_, query: types.CallbackQuery):
             _language,
             chat_id,
         )
+    )
+
+
+async def _delete_later(message: types.Message) -> None:
+    try:
+        await asyncio.sleep(7)
+        await message.delete()
+    except Exception:
+        pass
+
+
+@app.on_callback_query(filters.regex("^autoplay_panel") & ~app.bl_users)
+@lang.language()
+async def _autoplay_panel(_, query: types.CallbackQuery):
+    data = query.data.split()
+    action = data[1] if len(data) > 1 else None
+    chat_id = query.message.chat.id
+
+    if action == "info":
+        await query.answer()
+        return await query.edit_message_text(
+            text=query.lang.get(
+                "autoplay_info_title",
+                "ℹ️ <b>How Autoplay works?</b>\n\n"
+                "• Automatically continues music playback.\n"
+                "• Follows current audio or video mode.\n"
+                "• Designed for seamless listening.\n\n"
+                "🎶 Sit back & enjoy the music.",
+            ),
+            reply_markup=buttons.autoplay_info_markup(query.lang),
         )
+
+    elif action == "back":
+        await query.answer()
+        return await query.edit_message_text(
+            text=query.lang.get(
+                "autoplay_panel_title",
+                "🎶 <b>Autoplay:</b>\n\n"
+                "• Keeps music playing automatically.\n"
+                "• Ensures smooth and uninterrupted listening.\n"
+                "• Designed for a seamless music experience.",
+            ),
+            reply_markup=buttons.autoplay_markup(query.lang),
+        )
+
+    elif action == "close":
+        await query.answer()
+        try:
+            await query.message.delete()
+        except:
+            pass
+        return
+
+    elif action == "enable":
+        await db.set_autoplay(chat_id, True)
+        await query.answer(query.lang.get("autoplay_on", "Enabled"))
+
+        try:
+            await query.message.delete()
+        except:
+            pass
+
+        msg = await app.send_message(
+            chat_id=chat_id,
+            text=query.lang.get("autoplay_enabled_short", "✅ Autoplay Enabled"),
+        )
+        asyncio.create_task(_delete_later(msg))
+        return
