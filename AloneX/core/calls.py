@@ -92,13 +92,20 @@ class TgCall(PyTgCalls):
             if not seek_time:
                 media.time = 1
                 await db.add_call(chat_id)
+                play_type = (
+                    _lang.get("play_type_video", "🎥 Video")
+                    if media.video
+                    else _lang.get("play_type_audio", "🎵 Audio")
+                )
                 text = _lang["play_media"].format(
                     media.url,
                     media.title,
                     media.duration,
                     media.user,
+                    play_type,
                 )
-                keyboard = buttons.controls(chat_id)
+                autoplay_on = await db.get_autoplay(chat_id)
+                keyboard = buttons.controls(chat_id, _lang=_lang, autoplay_on=autoplay_on)
                 try:
                     await message.edit_media(
                         media=InputMediaPhoto(
