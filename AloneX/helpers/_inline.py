@@ -187,8 +187,10 @@ class Inline:
         return self.ikm([[self.ikb(text=text, url=config.SUPPORT_CHAT)]])
 
     def play_queued(
-        self, chat_id: int, item_id: str, _text: str
+        self, chat_id: int, item_id: str, _text: str, _lang: dict = None
     ) -> types.InlineKeyboardMarkup:
+        if not _lang:
+            _lang = lang.languages["en"]
         return self.ikm(
             [
                 [
@@ -197,7 +199,19 @@ class Inline:
                         callback_data=f"controls force {chat_id} {item_id}",
                         style=ButtonStyle.SUCCESS,
                     )
-                ]
+                ],
+                [
+                    self.ikb(
+                        text="➕ Add Me",
+                        url=f"https://t.me/{app.username}?startgroup=true",
+                        style=ButtonStyle.SUCCESS,
+                    ),
+                    self.ikb(
+                        text=_lang.get("close", "⌯ 𝐂ʟσsє ⌯"),
+                        callback_data="help close",
+                        style=ButtonStyle.DANGER,
+                    ),
+                ],
             ]
         )
 
@@ -286,4 +300,4 @@ class Inline:
                     self.ikb(text="Youtube", url=link),
                 ],
             ]
-        )
+                    )
