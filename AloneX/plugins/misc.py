@@ -117,11 +117,18 @@ async def update_timer(length=10):
                     remove = False
                     timer = f"{time.strftime('%M:%S', time.gmtime(played))} | {timer} | -{time.strftime('%M:%S', time.gmtime(remaining))}"
 
+                _lang = await lang.get_lang(chat_id)
+                autoplay_on = await db.get_autoplay(chat_id)
                 await app.edit_message_reply_markup(
                     chat_id=chat_id,
                     message_id=message_id,
                     reply_markup=buttons.controls(
-                        chat_id=chat_id, timer=timer, remove=remove
+                        chat_id=chat_id,
+                        timer=timer,
+                        remove=remove,
+                        _lang=_lang,
+                        autoplay_on=autoplay_on,
+                        played=played,
                     ),
                 )
             except Exception:
