@@ -1,6 +1,6 @@
 # Copyright (c) 2025 TheHamkerAlone
 # Licensed under the MIT License.
-# This file is part of AloneXMusic
+# shona the queen
 
 
 from pyrogram import enums, types
