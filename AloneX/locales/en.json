@@ -66,7 +66,7 @@
     "ping_pong": "<u><b>Pong!</b></u>\n\n<b>Latency:</b> <code>{0}ms</code>\n\n<b>Uptime:</b> {1}\n<b>CPU:</b> <code>{2}%</code>\n<b>RAM:</b> <code>{3}%</code>\n<b>Disk:</b> <code>{4}%</code>\n<b>PyTgCalls Latency:</b> <code>{5}ms</code>",
     "play_admin": "<u><b>Admin only play</b></u>\n\nOnly admins are allowed to play in this chat.",
     "play_banned": "<u><b>{0} assistant is banned your chat</b></u>\n\n<b>ID:</b> <code>{1}</code>\n<b>Name:</b> {2}\n<b>Username:</b> {3}",
-    "play_media": "<blockquote><emoji id=5929221469027437894>🎶</emoji><b> <b>𝐒ᴛʀᴇᴀᴍ 𝐈ɴɪᴛɪᴀᴛᴇᴅ |</b></blockquote>\n<blockquote><b><emoji id=5972072533833289156>🎶</emoji><b> 𝐓ɪᴛʟᴇ :</b> <a href={0}>{1}</a>\n<b><emoji id=5408910404732595664>⏱</emoji><b> 𝐃ᴜʀᴀᴛɪᴏɴ :</b> {2} 𝐌ɪɴᴜᴛᴇs\n<b><emoji id=5409132617750555920>🎶</emoji><b> 𝐏ʟᴀʏᴇᴅ 𝐁ʏ :</b> {3}</b></blockquote>",
+    "play_media": "<blockquote><emoji id=5929221469027437894>🎶</emoji><b> <b>𝐒ᴛʀᴇᴀᴍ 𝐈ɴɪᴛɪᴀᴛᴇᴅ |</b></blockquote>\n<blockquote><b><emoji id=5972072533833289156>🎶</emoji><b> 𝐓ɪᴛʟᴇ :</b> <a href={0}>{1}</a>\n<b><emoji id=5408910404732595664>⏱</emoji><b> 𝐃ᴜʀᴀᴛɪᴏɴ :</b> {2} 𝐌ɪɴᴜᴛᴇs\n<b><emoji id=5409132617750555920>🎶</emoji><b> 𝐏ʟᴀʏᴇᴅ 𝐁ʏ :</b> {3}</b></blockquote>\n<blockquote>🔄 <b>𝐏ʟᴀʏ 𝐓ʏᴘᴇ :</b> {4}</blockquote>",
     "play_log": "<u>{0} Play Log</u>\n\n<b>Chat:</b> <code>{1}</code> | {2}\n<b>User:</b> <code>{3}</code> | {4}\n<b>Message link:</b> {5}\n\n<b>➣ 𝐓ɪᴛʟᴇ :</b> {6}\n<b>➦ 𝐃ᴜʀᴀᴛɪᴏɴ : </b> {7} 𝐌ɪɴᴜᴛᴇs",
     "play_queued": "<blockquote><emoji id=5895512435384651275>🎶</emoji><b> <b>𝐒ᴏɴɢ 𝐄ɴǫᴜᴇᴜᴇᴅ • 𝐒ʟᴏᴛ #{0}</blockquote>\n<blockquote><emoji id=5972072533833289156>🎶</emoji><b> 𝐓ɪᴛʟᴇ :</b> <a href={1}>{2}</a>\n<b><emoji id=5408910404732595664>⏱</emoji><b> 𝐃ᴜʀᴀᴛɪᴏɴ : </b> {3} 𝐌ɪɴᴜᴛᴇs\n<b><emoji id=5409132617750555920>🎶</emoji><b> 𝐏ʟᴀʏᴇᴅ 𝐁ʏ :</b> {4}</b></blockquote>",
     "play_usage": "<b>Usage:</b>\n\n<code>/play attention</code>",
@@ -176,5 +176,9 @@
     "autoplay_panel_enable_btn": "Enable Autoplay",
     "autoplay_panel_info_btn": "Info",
     "autoplay_info_title": "ℹ️ <b>How Autoplay works?</b>\n\n• Automatically continues music playback.\n• Follows current audio or video mode.\n• Designed for seamless listening.\n\n🎶 Sit back & enjoy the music.",
-    "autoplay_enabled_short": "✅ Autoplay Enabled"
+    "autoplay_enabled_short": "✅ Autoplay Enabled",
+    "play_type_audio": "🎵 Audio",
+    "play_type_video": "🎥 Video",
+    "autoplay_row_on": "Auto-Play : Enable | ✅",
+    "autoplay_row_off": "Auto-Play : Disable | ❌"
 }
