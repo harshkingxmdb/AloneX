@@ -6,6 +6,7 @@
 from pathlib import Path
 
 from pyrogram import filters, types
+from pyrogram.types import LinkPreviewOptions
 
 from AloneX import anon, app, config, db, lang, queue, tg, yt
 from AloneX.helpers import buttons, utils
@@ -108,6 +109,12 @@ async def play_hndlr(
                 ),
                 reply_markup=buttons.play_queued(
                     m.chat.id, file.id, m.lang["play_now"], _lang=m.lang
+                ),
+                link_preview_options=LinkPreviewOptions(
+                    is_disabled=False,
+                    url=file.url,
+                    prefer_large_media=True,
+                    show_above_text=True,
                 ),
             )
             if tracks:
