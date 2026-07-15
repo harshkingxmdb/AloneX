@@ -56,6 +56,18 @@ class Inline:
             ]
         )
 
+    def _seek_styles(self, played: int) -> list:
+        """Cycles a highlight color across the seek row (-20s / replay / +20s)
+        each time the progress timer ticks, giving a moving highlight effect
+        that shifts back and forth as the song progresses."""
+        styles = [ButtonStyle.PRIMARY, ButtonStyle.PRIMARY, ButtonStyle.PRIMARY]
+        if played is None:
+            return styles
+        pattern = [0, 1, 2, 1]  # ping-pong: left -> middle -> right -> middle
+        tick = int(played) // 7
+        styles[pattern[tick % len(pattern)]] = ButtonStyle.SUCCESS
+        return styles
+
     def controls(
         self,
         chat_id: int,
@@ -63,7 +75,12 @@ class Inline:
         timer: str = None,
         remove: bool = False,
         _lang: dict = None,
+        autoplay_on: bool = None,
+        played: int = None,
     ) -> types.InlineKeyboardMarkup:
+        if not _lang:
+            _lang = lang.languages["en"]
+
         keyboard = []
         if status:
             keyboard.append(
@@ -84,15 +101,31 @@ class Inline:
                     self.ikb(text="▢", callback_data=f"controls stop {chat_id}", style=ButtonStyle.DANGER),
                 ]
             )
+
+            if autoplay_on is not None:
+                ap_text = (
+                    _lang.get("autoplay_row_on", "Auto-Play : Enable | ✅")
+                    if autoplay_on
+                    else _lang.get("autoplay_row_off", "Auto-Play : Disable | ❌")
+                )
+                keyboard.append(
+                    [
+                        self.ikb(
+                            text=ap_text,
+                            callback_data=f"controls autoplay_toggle {chat_id}",
+                            style=ButtonStyle.SUCCESS if autoplay_on else ButtonStyle.DANGER,
+                        )
+                    ]
+                )
+
+            seek_styles = self._seek_styles(played)
             keyboard.append(
                 [
-                    self.ikb(text="≪ -20s", callback_data=f"controls seek_back {chat_id}", style=ButtonStyle.PRIMARY),
-                    self.ikb(text="🔄", callback_data=f"controls replay {chat_id}", style=ButtonStyle.PRIMARY),
-                    self.ikb(text="+20s ≫", callback_data=f"controls seek_fwd {chat_id}", style=ButtonStyle.PRIMARY),
+                    self.ikb(text="≪ -20s", callback_data=f"controls seek_back {chat_id}", style=seek_styles[0]),
+                    self.ikb(text="⥁", callback_data=f"controls replay {chat_id}", style=seek_styles[1]),
+                    self.ikb(text="+20s ≫", callback_data=f"controls seek_fwd {chat_id}", style=seek_styles[2]),
                 ]
             )
-            if not _lang:
-                _lang = lang.languages["en"]
             keyboard.append(
                 [
                     self.ikb(
@@ -253,4 +286,4 @@ class Inline:
                     self.ikb(text="Youtube", url=link),
                 ],
             ]
-                    )
+        )
