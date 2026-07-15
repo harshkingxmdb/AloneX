@@ -33,6 +33,24 @@ async def _controls(_, query: types.CallbackQuery):
 
     if action == "status":
         return await query.answer()
+
+    if action == "autoplay_toggle":
+        new_state = not await db.get_autoplay(chat_id)
+        await db.set_autoplay(chat_id, new_state)
+        await query.answer(
+            query.lang.get("autoplay_on", "Enabled")
+            if new_state
+            else query.lang.get("autoplay_off", "Disabled")
+        )
+        try:
+            return await query.edit_message_reply_markup(
+                reply_markup=buttons.controls(
+                    chat_id, _lang=query.lang, autoplay_on=new_state
+                )
+            )
+        except:
+            return
+
     await query.answer(query.lang["processing"], show_alert=True)
 
     if action == "pause":
@@ -132,7 +150,10 @@ async def _controls(_, query: types.CallbackQuery):
                 flags=re.DOTALL,
             )
             keyboard = buttons.controls(
-                chat_id, status=status if action != "resume" else None
+                chat_id,
+                status=status if action != "resume" else None,
+                _lang=query.lang,
+                autoplay_on=await db.get_autoplay(chat_id),
             )
         await query.edit_message_text(
             f"{mtext}\n\n<blockquote>{reply}</blockquote>", reply_markup=keyboard
