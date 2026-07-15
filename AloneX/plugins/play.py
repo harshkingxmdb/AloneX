@@ -92,6 +92,11 @@ async def play_hndlr(
         position = queue.add(m.chat.id, file)
 
         if position != 0 or await db.get_call(m.chat.id):
+            play_type = (
+                m.lang.get("play_type_video", "🎥 Video")
+                if file.video
+                else m.lang.get("play_type_audio", "🎵 Audio")
+            )
             await sent.edit_text(
                 m.lang["play_queued"].format(
                     position,
@@ -99,9 +104,10 @@ async def play_hndlr(
                     file.title,
                     file.duration,
                     m.from_user.mention,
+                    play_type,
                 ),
                 reply_markup=buttons.play_queued(
-                    m.chat.id, file.id, m.lang["play_now"]
+                    m.chat.id, file.id, m.lang["play_now"], _lang=m.lang
                 ),
             )
             if tracks:
@@ -127,4 +133,4 @@ async def play_hndlr(
     await app.send_message(
         chat_id=m.chat.id,
         text=m.lang["playlist_queued"].format(len(tracks)) + added,
-                     )
+    )
