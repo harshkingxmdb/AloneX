@@ -72,7 +72,6 @@ class VCLogger:
         action = f"Joined [{role}]" if joined else f"Left [{role}]"
 
         text = (
-            f"<b>@{app.username} || Music Bot</b>\n"
             f"<b>{tag}</b>\n\n"
             f"<blockquote>Name ➜ {mention}\n"
             f"Id ➜ <code>{user_id}</code>\n"
