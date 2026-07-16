@@ -3,6 +3,7 @@
 # This file is part of AloneXMusic
 # ALONE-CODER
 
+import asyncio
 from collections import defaultdict
 
 from ntgcalls import (ConnectionNotFound, TelegramServerError,
@@ -148,12 +149,27 @@ class TgCall(PyTgCalls):
         await self.play_media(chat_id, msg, media)
 
 
+    async def _delete_later(self, chat_id: int, message_id: int, delay: int = 1) -> None:
+        try:
+            await asyncio.sleep(delay)
+            await app.delete_messages(chat_id=chat_id, message_ids=message_id, revoke=True)
+        except Exception:
+            pass
+
     async def play_next(self, chat_id: int) -> None:
         current = queue.get_current(chat_id)
         if current:
             history = self.history[chat_id]
             history.append(current.id)
             del history[:-20]
+
+            # the just-ended song's "Stream Initiated" card is no longer
+            # needed once the song finishes — clear it out of the group
+            # a second after it ends instead of leaving it sitting around.
+            if current.message_id:
+                asyncio.create_task(
+                    self._delete_later(chat_id, current.message_id, delay=1)
+                )
 
         # reset the prefetch guard now that this song's lifecycle has ended
         self.autoplay_prefetching.discard(chat_id)
