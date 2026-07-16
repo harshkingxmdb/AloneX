@@ -1,6 +1,6 @@
 # Copyright (c) 2025 TheHamkerAlone
 # Licensed under the MIT License.
-# This file is part of shonamusicbot
+# This file is part of AloneXMusic
 
 
 import asyncio
@@ -53,8 +53,9 @@ class VCLogger:
             if chat.username:
                 return f"https://t.me/{chat.username}?videochat"
             if chat.invite_link:
-                return chat.invite_link
-            return await app.export_chat_invite_link(chat_id)
+                return f"{chat.invite_link}?videochat"
+            link = await app.export_chat_invite_link(chat_id)
+            return f"{link}?videochat" if link else None
         except Exception:
             return None
 
