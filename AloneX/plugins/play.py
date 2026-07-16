@@ -6,10 +6,9 @@
 from pathlib import Path
 
 from pyrogram import filters, types
-from pyrogram.types import LinkPreviewOptions
 
 from AloneX import anon, app, config, db, lang, queue, tg, yt
-from AloneX.helpers import buttons, utils
+from AloneX.helpers import Track, buttons, thumb, utils
 from AloneX.helpers._play import checkUB
 
 
@@ -98,23 +97,25 @@ async def play_hndlr(
                 if file.video
                 else m.lang.get("play_type_audio", "🎵 Audio")
             )
-            await sent.edit_text(
-                m.lang["play_queued"].format(
-                    position,
-                    file.url,
-                    file.title,
-                    file.duration,
-                    m.from_user.mention,
-                    play_type,
+            _thumb = (
+                await thumb.generate(file)
+                if isinstance(file, Track)
+                else config.DEFAULT_THUMB
+            )
+            await sent.edit_media(
+                media=types.InputMediaPhoto(
+                    media=_thumb,
+                    caption=m.lang["play_queued"].format(
+                        position,
+                        file.url,
+                        file.title,
+                        file.duration,
+                        m.from_user.mention,
+                        play_type,
+                    ),
                 ),
                 reply_markup=buttons.play_queued(
                     m.chat.id, file.id, m.lang["play_now"], _lang=m.lang
-                ),
-                link_preview_options=LinkPreviewOptions(
-                    is_disabled=False,
-                    url=file.url,
-                    prefer_large_media=True,
-                    show_above_text=True,
                 ),
             )
             if tracks:
