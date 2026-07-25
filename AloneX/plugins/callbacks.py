@@ -1,7 +1,7 @@
-# Copyright (c) 2025 TheHamkerAlone
+# Copyright (c) 2025 @THECDERQUEEN
 # Licensed under the MIT License.
-# This file is part of AloneXMusic
-
+# This file is part of @SHONA_BOTS
+#SHONA-DECODER
 
 import re
 import asyncio
@@ -284,3 +284,37 @@ async def _autoplay_panel(_, query: types.CallbackQuery):
         )
         asyncio.create_task(_delete_later(msg))
         return
+
+
+@app.on_callback_query(filters.regex("^thumb_toggle") & ~app.bl_users)
+@lang.language()
+async def _thumb_toggle(_, query: types.CallbackQuery):
+    chat_id = query.message.chat.id
+    user_id = query.from_user.id
+
+    allowed = user_id in app.sudoers
+    if not allowed:
+        allowed = await db.is_auth(chat_id, user_id)
+    if not allowed:
+        admins = await db.get_admins(chat_id)
+        allowed = user_id in admins
+
+    if not allowed:
+        return await query.answer(query.lang["user_no_perms"], show_alert=True)
+
+    new_state = not await db.get_thumb(chat_id)
+    await db.set_thumb(chat_id, new_state)
+
+    status = "Enabled" if new_state else "Disabled"
+    await query.answer(status)
+
+    try:
+        await query.edit_message_text(
+            f"<b>{query.from_user.mention}</b>\n\n"
+            f"Thumbnail Settings\n\n"
+            f"Current Status: {status}\n\n"
+            f"Click the button below to toggle the status:",
+            reply_markup=buttons.thumb_markup(chat_id, new_state),
+        )
+    except:
+        pass
