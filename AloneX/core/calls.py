@@ -1,7 +1,7 @@
-# Copyright (c) 2025 TheHamkerAlone
+# Copyright (c) 2025 @THECDERQUEEN
 # Licensed under the MIT License.
-# This file is part of AloneXMusic
-# ALONE-CODER
+# This file is part of @SHONA_BOTS
+#SHONA-DECODER
 
 import asyncio
 from collections import defaultdict
@@ -62,9 +62,10 @@ class TgCall(PyTgCalls):
     ) -> None:
         client = await db.get_assistant(chat_id)
         _lang = await lang.get_lang(chat_id)
+        show_thumb = await db.get_thumb(chat_id)
         _thumb = (
             await thumb.generate(media)
-            if isinstance(media, Track)
+            if isinstance(media, Track) and show_thumb
             else config.DEFAULT_THUMB
         )
 
