@@ -1,7 +1,7 @@
-# Copyright (c) 2025 TheHamkerAlone
+# Copyright (c) 2025 @THECDERQUEEN
 # Licensed under the MIT License.
-# This file is part of AloneXMusic
-#ALONE-CODER
+# This file is part of @SHONA_BOTS
+#SHONA-DECODER
 
 from random import randint
 from time import time
@@ -24,6 +24,7 @@ class MongoDB:
         self.admin_play = []
         self.autoplay = []
         self.vc_logger = []
+        self.thumb_disabled = []
         self.blacklisted = []
         self.cmd_delete = []
         self.notified = []
@@ -297,6 +298,27 @@ class MongoDB:
         await self.chatsdb.update_one(
             {"_id": chat_id},
             {"$set": {"vc_logger": enable}},
+            upsert=True,
+        )
+
+    # THUMBNAIL METHODS
+    async def get_thumb(self, chat_id: int) -> bool:
+        """Returns True if thumbnails should be shown (enabled by default)."""
+        if chat_id not in self.thumb_disabled:
+            doc = await self.chatsdb.find_one({"_id": chat_id})
+            if doc and doc.get("thumb_disabled"):
+                self.thumb_disabled.append(chat_id)
+        return chat_id not in self.thumb_disabled
+
+    async def set_thumb(self, chat_id: int, enable: bool) -> None:
+        disable = not enable
+        if disable and chat_id not in self.thumb_disabled:
+            self.thumb_disabled.append(chat_id)
+        elif not disable and chat_id in self.thumb_disabled:
+            self.thumb_disabled.remove(chat_id)
+        await self.chatsdb.update_one(
+            {"_id": chat_id},
+            {"$set": {"thumb_disabled": disable}},
             upsert=True,
         )
 
