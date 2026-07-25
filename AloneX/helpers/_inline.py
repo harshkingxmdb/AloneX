@@ -87,24 +87,24 @@ class Inline:
             _lang = lang.languages["en"]
 
         keyboard = []
+        wave = self._wave_styles(played, 12)
         if status:
             keyboard.append(
                 [self.ikb(text=status, callback_data=f"controls status {chat_id}")]
             )
         elif timer:
             keyboard.append(
-                [self.ikb(text=timer, callback_data=f"controls status {chat_id}", style=ButtonStyle.PRIMARY)]
+                [self.ikb(text=timer, callback_data=f"controls status {chat_id}", style=wave[0])]
             )
 
         if not remove:
-            wave = self._wave_styles(played, 11)
             keyboard.append(
                 [
-                    self.ikb(text="▷", callback_data=f"controls resume {chat_id}", style=wave[0]),
-                    self.ikb(text="II", callback_data=f"controls pause {chat_id}", style=wave[1]),
-                    self.ikb(text="⥁", callback_data=f"controls replay {chat_id}", style=wave[2]),
-                    self.ikb(text="‣‣I", callback_data=f"controls skip {chat_id}", style=wave[3]),
-                    self.ikb(text="▢", callback_data=f"controls stop {chat_id}", style=wave[4]),
+                    self.ikb(text="▷", callback_data=f"controls resume {chat_id}", style=wave[1]),
+                    self.ikb(text="II", callback_data=f"controls pause {chat_id}", style=wave[2]),
+                    self.ikb(text="⥁", callback_data=f"controls replay {chat_id}", style=wave[3]),
+                    self.ikb(text="‣‣I", callback_data=f"controls skip {chat_id}", style=wave[4]),
+                    self.ikb(text="▢", callback_data=f"controls stop {chat_id}", style=wave[5]),
                 ]
             )
 
@@ -119,16 +119,16 @@ class Inline:
                         self.ikb(
                             text=ap_text,
                             callback_data=f"controls autoplay_toggle {chat_id}",
-                            style=wave[5],
+                            style=wave[6],
                         )
                     ]
                 )
 
             keyboard.append(
                 [
-                    self.ikb(text="≪ -20s", callback_data=f"controls seek_back {chat_id}", style=wave[6]),
-                    self.ikb(text="⥁", callback_data=f"controls replay {chat_id}", style=wave[7]),
-                    self.ikb(text="+20s ≫", callback_data=f"controls seek_fwd {chat_id}", style=wave[8]),
+                    self.ikb(text="≪ -20s", callback_data=f"controls seek_back {chat_id}", style=wave[7]),
+                    self.ikb(text="⥁", callback_data=f"controls replay {chat_id}", style=wave[8]),
+                    self.ikb(text="+20s ≫", callback_data=f"controls seek_fwd {chat_id}", style=wave[9]),
                 ]
             )
             keyboard.append(
@@ -136,12 +136,12 @@ class Inline:
                     self.ikb(
                         text="➕ Add Me",
                         url=f"https://t.me/{app.username}?startgroup=true",
-                        style=wave[9],
+                        style=wave[10],
                     ),
                     self.ikb(
                         text=_lang.get("close", "⌯ 𝐂ʟσsє ⌯"),
                         callback_data="help close",
-                        style=wave[10],
+                        style=wave[11],
                     ),
                 ]
             )
@@ -305,4 +305,4 @@ class Inline:
                     self.ikb(text="Youtube", url=link),
                 ],
             ]
-            )
+                    )
