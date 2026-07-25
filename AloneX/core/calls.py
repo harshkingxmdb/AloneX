@@ -1,7 +1,7 @@
-# Copyright (c) 2025 @THECDERQUEEN
+# Copyright (c) 2025 TheHamkerAlone
 # Licensed under the MIT License.
-# This file is part of @SHONA_BOTS
-#SHONA-DECODER
+# This file is part of AloneXMusic
+# ALONE-CODER
 
 import asyncio
 from collections import defaultdict
@@ -63,11 +63,13 @@ class TgCall(PyTgCalls):
         client = await db.get_assistant(chat_id)
         _lang = await lang.get_lang(chat_id)
         show_thumb = await db.get_thumb(chat_id)
-        _thumb = (
-            await thumb.generate(media)
-            if isinstance(media, Track) and show_thumb
-            else config.DEFAULT_THUMB
-        )
+        _thumb = None
+        if show_thumb:
+            _thumb = (
+                await thumb.generate(media)
+                if isinstance(media, Track)
+                else config.DEFAULT_THUMB
+            )
 
         if not media.file_path:
             await message.edit_text(_lang["error_no_file"].format(config.SUPPORT_CHAT))
@@ -108,21 +110,36 @@ class TgCall(PyTgCalls):
                 )
                 autoplay_on = await db.get_autoplay(chat_id)
                 keyboard = buttons.controls(chat_id, _lang=_lang, autoplay_on=autoplay_on)
-                try:
-                    await message.edit_media(
-                        media=InputMediaPhoto(
-                            media=_thumb,
+
+                if show_thumb:
+                    try:
+                        await message.edit_media(
+                            media=InputMediaPhoto(
+                                media=_thumb,
+                                caption=text,
+                            ),
+                            reply_markup=keyboard,
+                        )
+                    except MessageIdInvalid:
+                        media.message_id = (await app.send_photo(
+                            chat_id=chat_id,
+                            photo=_thumb,
                             caption=text,
-                        ),
-                        reply_markup=keyboard,
-                    )
-                except MessageIdInvalid:
-                    media.message_id = (await app.send_photo(
-                        chat_id=chat_id,
-                        photo=_thumb,
-                        caption=text,
-                        reply_markup=keyboard,
-                    )).id
+                            reply_markup=keyboard,
+                        )).id
+                else:
+                    try:
+                        await message.edit_text(text, reply_markup=keyboard)
+                    except Exception:
+                        try:
+                            await message.delete()
+                        except Exception:
+                            pass
+                        media.message_id = (await app.send_message(
+                            chat_id=chat_id,
+                            text=text,
+                            reply_markup=keyboard,
+                        )).id
         except FileNotFoundError:
             await message.edit_text(_lang["error_no_file"].format(config.SUPPORT_CHAT))
             await self.play_next(chat_id)
