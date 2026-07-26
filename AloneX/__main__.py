@@ -8,8 +8,8 @@ import importlib
 
 from pyrogram import idle
 
-from AloneX import (anon, app, config, db,
-                   logger, stop, userbot, yt)
+from AloneX import (anon, app, db,
+                   logger, stop, userbot)
 from AloneX.plugins import all_modules
 
 
@@ -22,9 +22,6 @@ async def main():
     for module in all_modules:
         importlib.import_module(f"AloneX.plugins.{module}")
     logger.info(f"Loaded {len(all_modules)} modules.")
-
-    if config.COOKIES_URL:
-        await yt.save_cookies(config.COOKIES_URL)
 
     sudoers = await db.get_sudoers()
     app.sudoers.update(sudoers)
