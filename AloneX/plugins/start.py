@@ -7,10 +7,27 @@ import asyncio
 import random
 from pyrogram import enums, filters, types
 
-from AloneX import app, config, db, lang
+from AloneX import app, config, db, lang, logger
 from AloneX.helpers import buttons, utils
 
 REACT_EMOJIS = ["🥰", "🔥", "💖", "😁", "😎", "🌚", "❤️‍🔥", "♥️", "🎉", "🙈"]
+
+PURVI_STKR = [
+    "CAACAgUAAxkBAAIPNGpruZ9_f9uU1fDT8NH8_Y0khHzgAAIpFQACvTqpVWqbFSKOnWYxHgQ",
+    "CAACAgUAAxkBAAIPN2pruiFB2-n9WchfMu_XhVud1CASAAI4FwACDDexVVp91U_1BZKFHgQ",
+    "CAACAgUAAxkBAAIPOmprujVwFDuRESgRAdHYqrIKu1MzAAKDGgACZSupVbmJpWW9LmXJHgQ",
+    "CAACAgUAAxkBAAIPO2prujYWaRAGsER9KWAs4rX0Zss_AAIsHwACdd6xVd2HOWQPA_qtHgQ",
+    "CAACAgUAAxkBAAIPPGprujjZmdaEeRs2uVC1RMxamfl9AAJZHQACCa-pVfefqZZtTHEdHgQ",
+    "CAACAgUAAxkBAAIPPWprujnZdJc-uGh9Ij8BHsZhTuFVAAJ9GAACXB-pVds_sm8brMEqHgQ",
+    "CAACAgUAAxkBAAIPPmprujogyg_RWL6jgoRS0c0dxRC4AAIlGAACKI6wVVNEvN-6z3Z7HgQ",
+]
+
+EFFECT_IDS = [
+    5046509860389126442,
+    5107584321108051014,
+    5104841245755180586,
+    5159385139981059251,
+]
 
 
 @app.on_message(filters.command(["help"]) & filters.private & ~app.bl_users)
@@ -34,10 +51,30 @@ async def start(_, message: types.Message):
 
     try:
         await message.react(random.choice(REACT_EMOJIS))
-    except Exception:
-        pass
+    except Exception as e:
+        logger.error(f"[Start] Reaction failed: {e}")
+
+    try:
+        sticker = await message.reply_sticker(random.choice(PURVI_STKR))
+        await asyncio.sleep(1)
+        await sticker.delete()
+    except Exception as e:
+        logger.error(f"[Start] Sticker failed: {e}")
 
     private = message.chat.type == enums.ChatType.PRIVATE
+
+    if private:
+        try:
+            purvi = await message.reply_text(f"**ʜєʟʟᴏ ᴅєᴧʀ {message.from_user.mention}**")
+            await asyncio.sleep(0.4)
+            await purvi.edit_text("**ɪ ᴧϻ ʏσᴜʀ ϻᴜsɪᴄ ʙσᴛ..🦋**")
+            await asyncio.sleep(0.4)
+            await purvi.edit_text("**ʜσᴡ ᴧʀє ʏσᴜ ᴛσᴅᴧʏ.....??**")
+            await asyncio.sleep(0.4)
+            await purvi.delete()
+        except Exception:
+            pass
+
     _text = (
         message.lang["start_pm"].format(message.from_user.first_name, app.name)
         if private
@@ -45,12 +82,22 @@ async def start(_, message: types.Message):
     )
 
     key = buttons.start_key(message.lang, private)
-    await message.reply_photo(
-        photo=config.START_IMG,
-        caption=_text,
-        reply_markup=key,
-        quote=not private,
-    )
+    try:
+        await message.reply_photo(
+            photo=config.START_IMG,
+            caption=_text,
+            reply_markup=key,
+            quote=not private,
+            message_effect_id=random.choice(EFFECT_IDS),
+        )
+    except Exception as e:
+        logger.error(f"[Start] message_effect_id failed, falling back: {e}")
+        await message.reply_photo(
+            photo=config.START_IMG,
+            caption=_text,
+            reply_markup=key,
+            quote=not private,
+        )
 
     if private:
         if await db.is_user(message.from_user.id):
