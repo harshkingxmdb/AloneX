@@ -10,7 +10,7 @@ from pyrogram import enums, filters, types
 from AloneX import app, config, db, lang, logger
 from AloneX.helpers import buttons, utils
 
-REACT_EMOJIS = ["🥰", "🔥", "💖", "😁", "😎", "🌚", "❤️‍🔥", "♥️", "🎉", "🙈"]
+REACT_EMOJIS = ["🥰", "🔥", "💖", "😁", "😎", "🌚", "❤️‍🔥", "❤", "🎉", "🙈"]
 
 PURVI_STKR = [
     "CAACAgUAAxkBAAIPNGpruZ9_f9uU1fDT8NH8_Y0khHzgAAIpFQACvTqpVWqbFSKOnWYxHgQ",
@@ -20,13 +20,6 @@ PURVI_STKR = [
     "CAACAgUAAxkBAAIPPGprujjZmdaEeRs2uVC1RMxamfl9AAJZHQACCa-pVfefqZZtTHEdHgQ",
     "CAACAgUAAxkBAAIPPWprujnZdJc-uGh9Ij8BHsZhTuFVAAJ9GAACXB-pVds_sm8brMEqHgQ",
     "CAACAgUAAxkBAAIPPmprujogyg_RWL6jgoRS0c0dxRC4AAIlGAACKI6wVVNEvN-6z3Z7HgQ",
-]
-
-EFFECT_IDS = [
-    5046509860389126442,
-    5107584321108051014,
-    5104841245755180586,
-    5159385139981059251,
 ]
 
 
@@ -65,11 +58,11 @@ async def start(_, message: types.Message):
 
     if private:
         try:
-            purvi = await message.reply_text(f"**ʜєʟʟᴏ ᴅєᴧʀ {message.from_user.mention}**")
+            purvi = await message.reply_text(f"𝐇єʟʟᴏ 𝐃єᴧʀ {message.from_user.mention}**")
             await asyncio.sleep(0.4)
-            await purvi.edit_text("**ɪ ᴧϻ ʏσᴜʀ ϻᴜsɪᴄ ʙσᴛ..🦋**")
+            await purvi.edit_text("𝐈 𝐀ϻ 𝐘σᴜʀ 𝐌ᴜsɪᴄ 𝐁σᴛ..🦋")
             await asyncio.sleep(0.4)
-            await purvi.edit_text("**ʜσᴡ ᴧʀє ʏσᴜ ᴛσᴅᴧʏ.....??**")
+            await purvi.edit_text("𝐇σᴡ 𝐀ʀє 𝐘σᴜ 𝐓σᴅᴧʏ.....??")
             await asyncio.sleep(0.4)
             await purvi.delete()
         except Exception:
@@ -82,22 +75,12 @@ async def start(_, message: types.Message):
     )
 
     key = buttons.start_key(message.lang, private)
-    try:
-        await message.reply_photo(
-            photo=config.START_IMG,
-            caption=_text,
-            reply_markup=key,
-            quote=not private,
-            message_effect_id=random.choice(EFFECT_IDS),
-        )
-    except Exception as e:
-        logger.error(f"[Start] message_effect_id failed, falling back: {e}")
-        await message.reply_photo(
-            photo=config.START_IMG,
-            caption=_text,
-            reply_markup=key,
-            quote=not private,
-        )
+    await message.reply_photo(
+        photo=config.START_IMG,
+        caption=_text,
+        reply_markup=key,
+        quote=not private,
+    )
 
     if private:
         if await db.is_user(message.from_user.id):
