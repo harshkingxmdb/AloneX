@@ -4,10 +4,13 @@
 #ALONE-CODER
 
 import asyncio
+import random
 from pyrogram import enums, filters, types
 
 from AloneX import app, config, db, lang
 from AloneX.helpers import buttons, utils
+
+REACT_EMOJIS = ["🥰", "🔥", "💖", "😁", "😎", "🌚", "❤️‍🔥", "♥️", "🎉", "🙈"]
 
 
 @app.on_message(filters.command(["help"]) & filters.private & ~app.bl_users)
@@ -28,6 +31,11 @@ async def start(_, message: types.Message):
 
     if len(message.command) > 1 and message.command[1] == "help":
         return await _help(_, message)
+
+    try:
+        await message.react(random.choice(REACT_EMOJIS))
+    except Exception:
+        pass
 
     private = message.chat.type == enums.ChatType.PRIVATE
     _text = (
@@ -77,10 +85,32 @@ async def _new_member(_, message: types.Message):
     if message.chat.type != enums.ChatType.SUPERGROUP:
         return await message.chat.leave()
 
-    await asyncio.sleep(3)
+    bot_joined = any(member.id == app.id for member in message.new_chat_members)
+
+    if bot_joined:
+        if message.chat.id in await db.get_blacklisted(True):
+            try:
+                await message.reply_text(
+                    message.lang.get(
+                        "bl_chat_notify",
+                        "This group is blacklisted from using this bot.",
+                    )
+                )
+            except Exception:
+                pass
+            return await message.chat.leave()
+
+        await asyncio.sleep(3)
+        if await db.is_chat(message.chat.id):
+            return
+        await utils.send_log(message, True)
+        await db.add_chat(message.chat.id)
+        return
+
+    banned_users = await db.get_blacklisted()
     for member in message.new_chat_members:
-        if member.id == app.id:
-            if await db.is_chat(message.chat.id):
-                return
-            await utils.send_log(message, True)
-            await db.add_chat(message.chat.id)
+        if member.id in banned_users:
+            try:
+                await message.chat.ban_member(member.id)
+            except Exception:
+                pass
