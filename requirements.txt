@@ -1,7 +1,7 @@
 #ALONE-CODER
 
 aiohttp~=3.14.1
-kurigram>=2.2.21
+kurigram>=2.2.23
 pillow~=12.2.0
 psutil~=7.2.2
 pymongo>=4.16.0
