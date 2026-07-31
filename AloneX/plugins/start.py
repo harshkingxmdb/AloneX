@@ -1,8 +1,3 @@
-# Copyright (c) 2025 TheHamkerAlone
-# Licensed under the MIT License.
-# This file is part of AloneXMusic
-#ALONE-CODER
-
 import asyncio
 import random
 from pyrogram import enums, filters, types
@@ -65,11 +60,11 @@ async def start(_, message: types.Message):
 
     if private:
         try:
-            purvi = await message.reply_text(f"**ʜєʟʟᴏ ᴅєᴧʀ {message.from_user.mention}**")
+            purvi = await message.reply_text(f"𝐇єʟʟᴏ ᴅєᴧʀ {message.from_user.mention}")
             await asyncio.sleep(0.4)
-            await purvi.edit_text("**ɪ ᴧϻ ʏσᴜʀ ϻᴜsɪᴄ ʙσᴛ..🦋**")
+            await purvi.edit_text("𝐈 𝐀ϻ 𝐘σᴜʀ 𝐌ᴜsɪᴄ ʙσᴛ..🦋")
             await asyncio.sleep(0.4)
-            await purvi.edit_text("**ʜσᴡ ᴧʀє ʏσᴜ ᴛσᴅᴧʏ.....??**")
+            await purvi.edit_text("𝐇σᴡ 𝐀ʀє 𝐘σᴜ 𝐓σᴅᴧʏ.....??")
             await asyncio.sleep(0.4)
             await purvi.delete()
         except Exception:
