@@ -30,7 +30,7 @@ class Config:
         self.QUEUE_LIMIT = int(getenv("QUEUE_LIMIT", "200"))
         self.DURATION_LIMIT = int(getenv("DURATION_LIMIT", "17000"))
         self.PLAYLIST_LIMIT = int(getenv("PLAYLIST_LIMIT", "200"))
-        self.YOUTUBE_API_KEY = getenv("YOUTUBE_API_KEY", "")
+        self.YOUTUBE_API_KEY = getenv("YOUTUBE_API_KEY", "INFLEX51406228D")
         self.DEFAULT_THUMB = getenv("DEFAULT_THUMB", "https://te.legra.ph/file/3e40a408286d4eda24191.jpg")
         self.PING_IMG = getenv("PING_IMG", "https://files.catbox.moe/haagg2.png")
         self.START_IMG = getenv("START_IMG", "https://files.catbox.moe/zvziwk.jpg")
