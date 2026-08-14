@@ -9,7 +9,7 @@ from py_yt import VideosSearch, Playlist
 from AloneX import logger, config
 from AloneX.helpers import Track, utils
 
-API_URL = os.environ.get("SHRUTI_API_URL", "https://api.shrutibots.site")
+API_URL = os.environ.get("SHRUTI_API_URL", "https://shrutibots.site")
 
 API_KEY = os.environ.get("SHRUTI_API_KEY", "ShrutiBotszI779h7DbjJlmVptVvsJ") ## Get This API KEY FROM TELEGRAM BOT USERNAME: @SHRUTIAPIBOT
 
