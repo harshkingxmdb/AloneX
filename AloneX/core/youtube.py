@@ -1,87 +1,14 @@
-# FIX BY SHONA @THECDERQUEEN
 import os
 import re
 import asyncio
 import aiohttp
-import random
 import yt_dlp
 from py_yt import VideosSearch, Playlist
 from AloneX import logger, config
 from AloneX.helpers import Track, utils
 
-API_URL = os.environ.get("SHRUTI_API_URL", "https://shrutibots.site")
-
-API_KEY = os.environ.get("SHRUTI_API_KEY", "ShrutiBotsw0nvtsfSv8olIroLRzCI") ## Get This API KEY FROM TELEGRAM BOT USERNAME: @SHRUTIAPIBOT
-
+API_URL = "https://apiiibot-d8ff737b4333.herokuapp.com"  # tumhara hosted nub yt api
 DOWNLOAD_DIR = "downloads"
-
-
-async def download_song(link: str) -> str:
-    video_id = link.split("v=")[-1].split("&")[0] if "v=" in link else link
-    if not video_id or len(video_id) < 3:
-        return None
-
-    os.makedirs(DOWNLOAD_DIR, exist_ok=True)
-    file_path = os.path.join(DOWNLOAD_DIR, f"{video_id}.mp3")
-    if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-        return file_path
-
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                f"{API_URL}/download",
-                params={"url": video_id, "type": "audio", "api_key": API_KEY},
-                timeout=aiohttp.ClientTimeout(total=300)
-            ) as resp:
-                if resp.status != 200:
-                    return None
-                with open(file_path, "wb") as f:
-                    async for chunk in resp.content.iter_chunked(131072):
-                        f.write(chunk)
-        if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-            return file_path
-        return None
-    except Exception:
-        if os.path.exists(file_path):
-            try:
-                os.remove(file_path)
-            except Exception:
-                pass
-        return None
-
-
-async def download_video(link: str) -> str:
-    video_id = link.split("v=")[-1].split("&")[0] if "v=" in link else link
-    if not video_id or len(video_id) < 3:
-        return None
-
-    os.makedirs(DOWNLOAD_DIR, exist_ok=True)
-    file_path = os.path.join(DOWNLOAD_DIR, f"{video_id}.mp4")
-    if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-        return file_path
-
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                f"{API_URL}/download",
-                params={"url": video_id, "type": "video", "api_key": API_KEY},
-                timeout=aiohttp.ClientTimeout(total=600)
-            ) as resp:
-                if resp.status != 200:
-                    return None
-                with open(file_path, "wb") as f:
-                    async for chunk in resp.content.iter_chunked(131072):
-                        f.write(chunk)
-        if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-            return file_path
-        return None
-    except Exception:
-        if os.path.exists(file_path):
-            try:
-                os.remove(file_path)
-            except Exception:
-                pass
-        return None
 
 
 class YouTube:
@@ -92,29 +19,8 @@ class YouTube:
             r"(youtube\.com/(watch\?v=|shorts/|playlist\?list=)|youtu\.be/)"
             r"([A-Za-z0-9_-]{11}|PL[A-Za-z0-9_-]+)([&?][^\s]*)?"
         )
-        self.cookie_dir = "AloneX/cookies"
 
-    def get_cookies(self):
-        if not os.path.exists(self.cookie_dir):
-            return None
-        cookies_files = [f for f in os.listdir(self.cookie_dir) if f.endswith(".txt")]
-        if not cookies_files:
-            return None
-        return os.path.join(self.cookie_dir, random.choice(cookies_files))
-
-    async def save_cookies(self, urls: list[str]) -> None:
-        logger.info("Saving cookies from urls...")
-        if not os.path.exists(self.cookie_dir):
-            os.makedirs(self.cookie_dir)
-        async with aiohttp.ClientSession() as session:
-            for i, url in enumerate(urls):
-                path = f"{self.cookie_dir}/cookie_{i}.txt"
-                link = "https://batbin.me/api/v2/paste/" + url.split("/")[-1]
-                async with session.get(link) as resp:
-                    resp.raise_for_status()
-                    with open(path, "wb") as fw:
-                        fw.write(await resp.read())
-        logger.info(f"Cookies saved in {self.cookie_dir}.")
+    # ---------------- basic helpers ----------------
 
     def valid(self, url: str) -> bool:
         return bool(re.match(self.regex, url))
@@ -163,14 +69,202 @@ class YouTube:
             logger.error(f"Playlist error: {e}")
         return tracks
 
+    # ---------------- FAST direct-stream (no file download, recommended) ----------------
+
+    async def get_stream_url(self, video_id: str, video: bool = False) -> str | None:
+        """
+        Resolve a direct, playable stream URL from your own nub yt api —
+        WITHOUT downloading the file to disk. Much faster than download():
+        skips the whole "download full file, then play" step entirely.
+
+        Pass the returned URL straight into PyTgCalls, e.g.:
+            from pytgcalls.types import MediaStream
+            stream = await yt.get_stream_url(video_id)
+            await call.play(chat_id, MediaStream(stream))
+
+        Falls back to download() automatically if resolution fails, so
+        existing call sites relying on a local file path can just check
+        `.startswith("http")` on the result to tell the two apart.
+        """
+        if not video_id or len(video_id) < 3:
+            return None
+
+        video_url = video_id if video_id.startswith("http") else f"{self.base}{video_id}"
+        mode = "video" if video else "audio"
+
+        try:
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=15)
+            ) as session:
+                params = {"q": video_url, "mode": mode}
+                headers = {"Authorization": f"Bearer {config.YOUTUBE_API_KEY}"}
+
+                async with session.get(f"{API_URL}/stream", params=params, headers=headers) as response:
+                    if response.status == 401:
+                        logger.error("[API] Invalid API token")
+                        return None
+                    if response.status == 429:
+                        logger.error("[API] Daily rate limit exceeded")
+                        return None
+                    if response.status != 200:
+                        logger.error(f"[API] returned {response.status}")
+                        return None
+
+                    data = await response.json()
+                    stream_url = data.get("stream_url")
+                    if not stream_url:
+                        logger.error(f"[API] response error: {data}")
+                        return None
+                    return stream_url
+
+        except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+            logger.warning(f"[API] get_stream_url network error for {video_id}: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"[API] get_stream_url exception for {video_id}: {e}")
+            return None
+
+    # ---------------- download (your own nub yt api, fallback / when a local file is needed) ----------------
+
     async def download(self, video_id: str, video: bool = False) -> str | None:
         if not video_id or len(video_id) < 3:
             return None
 
-        if video:
-            return await download_video(video_id)
-        else:
-            return await download_song(video_id)
+        os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+        ext = "mkv" if video else "webm"
+        file_path = os.path.join(DOWNLOAD_DIR, f"{video_id}.{ext}")
+
+        if os.path.exists(file_path):
+            return file_path
+
+        video_url = video_id if video_id.startswith("http") else f"{self.base}{video_id}"
+        mode = "video" if video else "audio"
+
+        max_retries = 3
+        retry_delay = 1  # seconds, flat delay — keep response fast
+        transient_statuses = {502, 503, 504}
+
+        for attempt in range(1, max_retries + 1):
+            try:
+                async with aiohttp.ClientSession(
+                    timeout=aiohttp.ClientTimeout(total=60)
+                ) as session:
+                    params = {"q": video_url, "mode": mode}
+                    headers = {"Authorization": f"Bearer {config.YOUTUBE_API_KEY}"}
+
+                    # Step 1: Ask your API to resolve a direct stream URL
+                    async with session.get(f"{API_URL}/stream", params=params, headers=headers) as response:
+                        if response.status == 401:
+                            logger.error("[API] Invalid API token")
+                            return None
+
+                        if response.status == 429:
+                            logger.error("[API] Daily rate limit exceeded")
+                            return None
+
+                        if response.status in transient_statuses:
+                            logger.warning(
+                                f"[API] returned {response.status} (attempt {attempt}/{max_retries}) for {video_id}"
+                            )
+                            if attempt < max_retries:
+                                await asyncio.sleep(retry_delay)
+                                continue
+                            logger.error(f"[API] gave up after {max_retries} attempts for {video_id}")
+                            return None
+
+                        if response.status != 200:
+                            logger.error(f"[API] returned {response.status}")
+                            return None
+
+                        try:
+                            data = await response.json()
+                        except Exception as e:
+                            logger.warning(
+                                f"[API] invalid JSON response (attempt {attempt}/{max_retries}) for {video_id}: {e}"
+                            )
+                            if attempt < max_retries:
+                                await asyncio.sleep(retry_delay)
+                                continue
+                            logger.error(f"[API] gave up after {max_retries} attempts for {video_id}")
+                            return None
+
+                        if not data.get("stream_url"):
+                            logger.error(f"[API] response error: {data}")
+                            if attempt < max_retries:
+                                await asyncio.sleep(retry_delay)
+                                continue
+                            return None
+
+                        download_link = data["stream_url"]
+
+                    # Step 2: Download the actual media bytes from the resolved stream URL
+                    async with session.get(download_link) as file_response:
+                        if file_response.status in transient_statuses:
+                            logger.warning(
+                                f"[API] file download returned {file_response.status} (attempt {attempt}/{max_retries}) for {video_id}"
+                            )
+                            if attempt < max_retries:
+                                await asyncio.sleep(retry_delay)
+                                continue
+                            logger.error(f"[API] gave up after {max_retries} attempts for {video_id}")
+                            return None
+
+                        if file_response.status != 200:
+                            logger.error(f"[API] Download failed ({file_response.status})")
+                            if attempt < max_retries:
+                                await asyncio.sleep(retry_delay)
+                                continue
+                            return None
+
+                        with open(file_path, "wb") as f:
+                            async for chunk in file_response.content.iter_chunked(8192):
+                                f.write(chunk)
+
+                if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+                    return file_path
+
+                # File ended up missing/empty despite a "successful" response —
+                # retry instead of silently giving up so transient glitches
+                # (connection reset mid-download, truncated body, etc.) don't
+                # cause a false "download failed" on the first blip.
+                logger.warning(
+                    f"[API] downloaded file was empty/missing (attempt {attempt}/{max_retries}) for {video_id}"
+                )
+                if os.path.exists(file_path):
+                    try: os.remove(file_path)
+                    except: pass
+                if attempt < max_retries:
+                    await asyncio.sleep(retry_delay)
+                    continue
+                logger.error(f"[API] gave up after {max_retries} attempts for {video_id}: file kept coming back empty")
+                return None
+
+            except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+                logger.warning(
+                    f"[API] network error (attempt {attempt}/{max_retries}) for {video_id}: {e}"
+                )
+                if os.path.exists(file_path):
+                    try: os.remove(file_path)
+                    except: pass
+                if attempt < max_retries:
+                    await asyncio.sleep(retry_delay)
+                    continue
+                logger.error(f"[API] gave up after {max_retries} attempts for {video_id}: {e}")
+                return None
+
+            except Exception as e:
+                logger.error(f"Download exception for ID {video_id} (attempt {attempt}/{max_retries}): {e}")
+                if os.path.exists(file_path):
+                    try: os.remove(file_path)
+                    except: pass
+                if attempt < max_retries:
+                    await asyncio.sleep(retry_delay)
+                    continue
+                return None
+
+        return None
+
+    # ---------------- autoplay helpers ----------------
 
     def _format_duration(self, seconds: int) -> str:
         seconds = max(int(seconds or 0), 0)
@@ -203,10 +297,6 @@ class YouTube:
             "extractor_retries": 1,
             "extractor_args": {"youtube": {"player_client": ["android"]}},
         }
-        cookie = self.get_cookies()
-        if cookie:
-            opts["cookiefile"] = cookie
-
         url = f"https://www.youtube.com/watch?v={video_id}&list=RD{video_id}"
         with yt_dlp.YoutubeDL(opts) as ydl:
             return ydl.extract_info(url, download=False)
@@ -265,7 +355,7 @@ class YouTube:
         self, current: Track, played: set[str]
     ) -> Track | None:
         """Fallback used when YouTube blocks the mix-playlist scrape (common on
-        server/cloud IPs without cookies). Reuses the same search backend that
+        server/cloud IPs). Reuses the same search backend that
         already powers /play, so it works wherever normal search works."""
         queries = []
         if current.channel_name:
@@ -311,7 +401,7 @@ class YouTube:
         """Fetch the next autoplay track, skipping anything already played in
         this session. Tries YouTube's related mix first, falling back to a
         text search (same backend as /play) if the mix is blocked or empty —
-        this is common on server/cloud IPs without YouTube cookies set."""
+        this is common on server/cloud IPs."""
         if not current or not current.id:
             return None
 
