@@ -24,10 +24,10 @@ class Config:
         self.LOGGER_GIFS = [
             url for url in getenv(
                 "LOGGER_GIFS",
-                "https://litter.catbox.moe/k0in7v.mp4 "
-                "https://litter.catbox.moe/m9wcwo.mp4 "
-                "https://litter.catbox.moe/mk16ev.mp4 "
-                "https://litter.catbox.moe/01eef5.mp4 "
+                "https://litter.catbox.moe/k0in7v.mp4"
+                "https://litter.catbox.moe/m9wcwo.mp4"
+                "https://litter.catbox.moe/mk16ev.mp4"
+                "https://litter.catbox.moe/01eef5.mp4"
                 "https://litter.catbox.moe/3dlg1e.mp4"
             ).split(" ")
             if url
