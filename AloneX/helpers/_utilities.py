@@ -3,6 +3,7 @@
 # This file is part of AloneXMusic
 #ALONE-CODER
 
+import random
 import re
 
 from pyrogram import enums, types
@@ -107,6 +108,27 @@ class Utilities:
 
     async def send_log(self, m: types.Message, chat: bool = False) -> None:
         if chat:
+            from AloneX import config
+            from AloneX.helpers import buttons
+
+            caption = m.lang.get(
+                "log_chat_gif",
+                "🎉 <b>New Chat Added!</b>\n\n"
+                "Thanks for adding {0} in <b>{1}</b>.\n\n"
+                "{0} is now ready to play music! 🎶",
+            ).format(app.mention, m.chat.title)
+
+            try:
+                gif = random.choice(config.LOGGER_GIFS) if config.LOGGER_GIFS else None
+                return await app.send_animation(
+                    chat_id=app.logger,
+                    animation=gif,
+                    caption=caption,
+                    reply_markup=buttons.logger_join_markup(m.lang),
+                )
+            except Exception:
+                pass
+
             user = m.from_user
             return await app.send_message(
                 chat_id=app.logger,
