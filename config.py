@@ -1,4 +1,4 @@
-#ALONE CODER
+#shona Queen 
 from os import getenv
 from dotenv import load_dotenv
 
@@ -21,17 +21,6 @@ class Config:
 
         self.SUPPORT_CHANNEL = getenv("SUPPORT_CHANNEL", "https://t.me/Shona_bots")
         self.SUPPORT_CHAT = getenv("SUPPORT_CHAT", "https://t.me/shona_support")
-        self.LOGGER_GIFS = [
-            url for url in getenv(
-                "LOGGER_GIFS",
-                "https://litter.catbox.moe/k0in7v.mp4"
-                "https://litter.catbox.moe/m9wcwo.mp4"
-                "https://litter.catbox.moe/mk16ev.mp4"
-                "https://litter.catbox.moe/01eef5.mp4"
-                "https://litter.catbox.moe/3dlg1e.mp4"
-            ).split(" ")
-            if url
-        ]
         self.OWNER_USERNAME = getenv("OWNER_USERNAME", "https://t.me/thecderqueen")
 
         self.AUTO_END: bool = getenv("AUTO_END", False)
