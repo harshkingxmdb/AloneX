@@ -13,11 +13,29 @@ class Inline:
     def cancel_dl(self, text) -> types.InlineKeyboardMarkup:
         return self.ikm([[self.ikb(text=text, callback_data=f"cancel_dl")]])
 
-    def thumb_markup(self, chat_id: int, enabled: bool) -> types.InlineKeyboardMarkup:
-        text = "✅ Enabled" if enabled else "❌ Disabled"
-        style = ButtonStyle.SUCCESS if enabled else ButtonStyle.DANGER
+    def logger_join_markup(self, _lang: dict) -> types.InlineKeyboardMarkup:
         return self.ikm(
-            [[self.ikb(text=text, callback_data=f"thumb_toggle {chat_id}", style=style)]]
+            [
+                [
+                    self.ikb(
+                        text=_lang.get("add_me", "✙ 𝐀ᴅᴅ 𝐌є 𝐈η 𝐘συʀ 𝐆ʀσυᴘ ✙"),
+                        url=f"https://t.me/{app.username}?startgroup=true",
+                        style=ButtonStyle.SUCCESS,
+                    ),
+                    self.ikb(
+                        text=_lang.get("support", "˹ 𝐒υᴘᴘσʀᴛ ˼"),
+                        url=config.SUPPORT_CHAT,
+                        style=ButtonStyle.SUCCESS,
+                    ),
+                ],
+                [
+                    self.ikb(
+                        text=_lang.get("language", "𝐋ᴀɴɢᴜᴀɢᴇ"),
+                        callback_data="language",
+                        style=ButtonStyle.PRIMARY,
+                    ),
+                ],
+            ]
         )
 
     def autoplay_markup(self, _lang: dict) -> types.InlineKeyboardMarkup:
@@ -63,15 +81,17 @@ class Inline:
             ]
         )
 
-    def _wave_styles(self, played: int, count: int) -> list:
-        """Cycles a green/blue/red wave across `count` buttons, shifting every
-        2 seconds of elapsed playback so the colors keep moving back and forth
-        across the whole control grid as the song plays."""
-        palette = [ButtonStyle.SUCCESS, ButtonStyle.PRIMARY, ButtonStyle.DANGER]
+    def _seek_styles(self, played: int) -> list:
+        """Cycles a highlight color across the seek row (-20s / replay / +20s)
+        each time the progress timer ticks, giving a moving highlight effect
+        that shifts back and forth as the song progresses."""
+        styles = [ButtonStyle.PRIMARY, ButtonStyle.PRIMARY, ButtonStyle.PRIMARY]
         if played is None:
-            return [ButtonStyle.PRIMARY] * count
-        shift = (int(played) // 2) % len(palette)
-        return [palette[(i + shift) % len(palette)] for i in range(count)]
+            return styles
+        pattern = [0, 1, 2, 1]  # ping-pong: left -> middle -> right -> middle
+        tick = int(played) // 7
+        styles[pattern[tick % len(pattern)]] = ButtonStyle.SUCCESS
+        return styles
 
     def controls(
         self,
@@ -87,24 +107,23 @@ class Inline:
             _lang = lang.languages["en"]
 
         keyboard = []
-        wave = self._wave_styles(played, 12)
         if status:
             keyboard.append(
                 [self.ikb(text=status, callback_data=f"controls status {chat_id}")]
             )
         elif timer:
             keyboard.append(
-                [self.ikb(text=timer, callback_data=f"controls status {chat_id}", style=wave[0])]
+                [self.ikb(text=timer, callback_data=f"controls status {chat_id}", style=ButtonStyle.PRIMARY)]
             )
 
         if not remove:
             keyboard.append(
                 [
-                    self.ikb(text="▷", callback_data=f"controls resume {chat_id}", style=wave[1]),
-                    self.ikb(text="II", callback_data=f"controls pause {chat_id}", style=wave[2]),
-                    self.ikb(text="⥁", callback_data=f"controls replay {chat_id}", style=wave[3]),
-                    self.ikb(text="‣‣I", callback_data=f"controls skip {chat_id}", style=wave[4]),
-                    self.ikb(text="▢", callback_data=f"controls stop {chat_id}", style=wave[5]),
+                    self.ikb(text="▷", callback_data=f"controls resume {chat_id}", style=ButtonStyle.SUCCESS),
+                    self.ikb(text="II", callback_data=f"controls pause {chat_id}", style=ButtonStyle.SUCCESS),
+                    self.ikb(text="⥁", callback_data=f"controls replay {chat_id}", style=ButtonStyle.PRIMARY),
+                    self.ikb(text="‣‣I", callback_data=f"controls skip {chat_id}", style=ButtonStyle.DANGER),
+                    self.ikb(text="▢", callback_data=f"controls stop {chat_id}", style=ButtonStyle.DANGER),
                 ]
             )
 
@@ -119,16 +138,17 @@ class Inline:
                         self.ikb(
                             text=ap_text,
                             callback_data=f"controls autoplay_toggle {chat_id}",
-                            style=wave[6],
+                            style=ButtonStyle.SUCCESS if autoplay_on else ButtonStyle.DANGER,
                         )
                     ]
                 )
 
+            seek_styles = self._seek_styles(played)
             keyboard.append(
                 [
-                    self.ikb(text="≪ -20s", callback_data=f"controls seek_back {chat_id}", style=wave[7]),
-                    self.ikb(text="⥁", callback_data=f"controls replay {chat_id}", style=wave[8]),
-                    self.ikb(text="+20s ≫", callback_data=f"controls seek_fwd {chat_id}", style=wave[9]),
+                    self.ikb(text="≪ -20s", callback_data=f"controls seek_back {chat_id}", style=seek_styles[0]),
+                    self.ikb(text="⥁", callback_data=f"controls replay {chat_id}", style=seek_styles[1]),
+                    self.ikb(text="+20s ≫", callback_data=f"controls seek_fwd {chat_id}", style=seek_styles[2]),
                 ]
             )
             keyboard.append(
@@ -136,12 +156,12 @@ class Inline:
                     self.ikb(
                         text="➕ Add Me",
                         url=f"https://t.me/{app.username}?startgroup=true",
-                        style=wave[10],
+                        style=ButtonStyle.SUCCESS,
                     ),
                     self.ikb(
                         text=_lang.get("close", "⌯ 𝐂ʟσsє ⌯"),
                         callback_data="help close",
-                        style=wave[11],
+                        style=ButtonStyle.DANGER,
                     ),
                 ]
             )
