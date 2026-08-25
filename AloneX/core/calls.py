@@ -36,11 +36,21 @@ class TgCall(PyTgCalls):
 
     async def stop(self, chat_id: int) -> None:
         client = await db.get_assistant(chat_id)
+
+        was_active = False
+        try:
+            was_active = await db.get_call(chat_id)
+        except Exception:
+            pass
+
         try:
             queue.clear(chat_id)
             await db.remove_call(chat_id)
         except:
             pass
+
+        if was_active and await db.get_vc_logger(chat_id):
+            await vclogger.notify_vc_ended(chat_id)
 
         self.history.pop(chat_id, None)
         self.pending_autoplay.pop(chat_id, None)
@@ -94,8 +104,11 @@ class TgCall(PyTgCalls):
                 config=types.GroupCallConfig(auto_start=False),
             )
             if not seek_time:
+                was_active = await db.get_call(chat_id)
                 media.time = 1
                 await db.add_call(chat_id)
+                if not was_active and await db.get_vc_logger(chat_id):
+                    await vclogger.notify_vc_started(chat_id)
                 play_type = (
                     _lang.get("play_type_video", "🎥 Video")
                     if media.video
