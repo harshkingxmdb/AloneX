@@ -318,3 +318,37 @@ async def _thumb_toggle(_, query: types.CallbackQuery):
         )
     except:
         pass
+
+
+@app.on_callback_query(filters.regex("^vclogger_toggle") & ~app.bl_users)
+@lang.language()
+async def _vclogger_toggle(_, query: types.CallbackQuery):
+    chat_id = query.message.chat.id
+    user_id = query.from_user.id
+
+    allowed = user_id in app.sudoers
+    if not allowed:
+        allowed = await db.is_auth(chat_id, user_id)
+    if not allowed:
+        admins = await db.get_admins(chat_id)
+        allowed = user_id in admins
+
+    if not allowed:
+        return await query.answer(query.lang["user_no_perms"], show_alert=True)
+
+    new_state = not await db.get_vc_logger(chat_id)
+    await db.set_vc_logger(chat_id, new_state)
+
+    state = "enabled" if new_state else "disabled"
+    await query.answer(state)
+
+    try:
+        await query.edit_message_text(
+            query.lang.get(
+                "vclogger_panel",
+                "Vc Logger Settings\n\nCurrent Status: {0}\n\nClick the button below to toggle the status:",
+            ).format(f"{'✅' if new_state else '❌'} {state}"),
+            reply_markup=buttons.vclogger_markup(chat_id, new_state),
+        )
+    except:
+        pass
