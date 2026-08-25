@@ -173,7 +173,7 @@ async def _new_member(_, message: types.Message):
     else:
         adder = "there"
 
-    bot_mention = f"@{app.username}"
+    bot_mention = app.name
     welcome_text = chat_lang.get(
         "group_welcome",
         "Hey {0},\n\nThanks For Adding {1} In <b>{2}</b>.\n\n{1} Is Now Ready To Play Music.",
