@@ -37,7 +37,7 @@ class Inline:
             [
                 [
                     self.ikb(
-                        text=lang.get("add_me", "Add Me"),
+                        text="Add Me",
                         url=f"https://t.me/{app.username}?startgroup=true",
                         style=ButtonStyle.PRIMARY,
                     ),
