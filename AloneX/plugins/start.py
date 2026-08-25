@@ -135,53 +135,64 @@ async def settings(_, message: types.Message):
 
 
 @app.on_message(filters.new_chat_members, group=7)
-@lang.language()
 async def _new_member(_, message: types.Message):
+    bot_joined = any(member.id == app.id for member in message.new_chat_members)
+    chat_lang = await lang.get_lang(message.chat.id)
+
+    if not bot_joined:
+        if message.chat.type != enums.ChatType.SUPERGROUP:
+            return await message.chat.leave()
+
+        banned_users = await db.get_blacklisted()
+        for member in message.new_chat_members:
+            if member.id in banned_users:
+                try:
+                    await message.chat.ban_member(member.id)
+                except Exception:
+                    pass
+        return
+
+    if message.chat.id in await db.get_blacklisted(True):
+        try:
+            await message.reply_text(
+                chat_lang.get(
+                    "bl_chat_notify",
+                    "This group is blacklisted from using this bot.",
+                )
+            )
+        except Exception:
+            pass
+        return await message.chat.leave()
+
+    # `from_user` is missing when the bot is added by an anonymous group
+    # admin (posting as the group itself) — fall back to sender_chat.
+    if message.from_user:
+        adder = message.from_user.mention
+    elif message.sender_chat:
+        adder = message.sender_chat.title or "there"
+    else:
+        adder = "there"
+
+    bot_mention = f"@{app.username}"
+    welcome_text = chat_lang.get(
+        "group_welcome",
+        "Hey {0},\n\nThanks For Adding {1} In <b>{2}</b>.\n\n{1} Is Now Ready To Play Music.",
+    ).format(adder, bot_mention, message.chat.title)
+
+    try:
+        await message.reply_animation(
+            animation=random.choice(GROUP_WELCOME_GIFS),
+            caption=welcome_text,
+            reply_markup=buttons.welcome_markup(chat_lang),
+        )
+    except Exception as e:
+        logger.error(f"[Start] Group welcome GIF failed: {e}")
+
     if message.chat.type != enums.ChatType.SUPERGROUP:
         return await message.chat.leave()
 
-    bot_joined = any(member.id == app.id for member in message.new_chat_members)
-
-    if bot_joined:
-        if message.chat.id in await db.get_blacklisted(True):
-            try:
-                await message.reply_text(
-                    message.lang.get(
-                        "bl_chat_notify",
-                        "This group is blacklisted from using this bot.",
-                    )
-                )
-            except Exception:
-                pass
-            return await message.chat.leave()
-
-        adder = message.from_user.mention if message.from_user else "there"
-        bot_mention = f"@{app.username}"
-        welcome_text = message.lang.get(
-            "group_welcome",
-            "Hey {0},\n\nThanks For Adding {1} In <b>{2}</b>.\n\n{1} Is Now Ready To Play Music.",
-        ).format(adder, bot_mention, message.chat.title)
-
-        try:
-            await message.reply_animation(
-                animation=random.choice(GROUP_WELCOME_GIFS),
-                caption=welcome_text,
-                reply_markup=buttons.welcome_markup(message.lang),
-            )
-        except Exception as e:
-            logger.error(f"[Start] Group welcome GIF failed: {e}")
-
-        await asyncio.sleep(3)
-        if await db.is_chat(message.chat.id):
-            return
-        await utils.send_log(message, True)
-        await db.add_chat(message.chat.id)
+    await asyncio.sleep(3)
+    if await db.is_chat(message.chat.id):
         return
-
-    banned_users = await db.get_blacklisted()
-    for member in message.new_chat_members:
-        if member.id in banned_users:
-            try:
-                await message.chat.ban_member(member.id)
-            except Exception:
-                pass
+    await utils.send_log(message, True)
+    await db.add_chat(message.chat.id)
