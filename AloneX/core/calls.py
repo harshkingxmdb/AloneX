@@ -1,7 +1,7 @@
-# Copyright (c) 2025 TheHamkerAlone
+# Copyright (c) 2025 @THECDERQUEEN
 # Licensed under the MIT License.
-# This file is part of AloneXMusic
-# ALONE-CODER
+# This file is part of @SHONA_BOTS
+#SHONA-DECODER
 
 import asyncio
 from collections import defaultdict
@@ -249,13 +249,51 @@ class TgCall(PyTgCalls):
 
         _lang = await lang.get_lang(chat_id)
         msg = await app.send_message(chat_id=chat_id, text=_lang["play_next"])
-        if not media.file_path:
+
+        MAX_AUTOPLAY_RETRIES = 3
+        attempts = 0
+        while not media.file_path:
             media.file_path = await yt.download(media.id, video=media.video)
-            if not media.file_path:
-                await self.stop(chat_id)
-                return await msg.edit_text(
-                    _lang["error_no_file"].format(config.SUPPORT_CHAT)
+            if media.file_path:
+                break
+
+            # download failed. If this track came from Autoplay (not a
+            # user-queued request), don't just stop the stream — try
+            # another related song instead, a few times.
+            autoplay_track = isinstance(media, Track) and media.user == "Autoplay"
+            if autoplay_track and await db.get_autoplay(chat_id) and attempts < MAX_AUTOPLAY_RETRIES:
+                attempts += 1
+                logger.warning(
+                    f"[Autoplay] Download failed for {media.id}, searching another "
+                    f"related track ({attempts}/{MAX_AUTOPLAY_RETRIES})."
                 )
+                self.history[chat_id].append(media.id)
+                queue.remove_current(chat_id)
+
+                try:
+                    related = await yt.get_related(current or media, self.history[chat_id])
+                except Exception as e:
+                    logger.error(f"[Autoplay] Unexpected error for chat {chat_id}: {e}")
+                    related = None
+
+                if not related:
+                    await self.stop(chat_id)
+                    return await msg.edit_text(
+                        _lang.get(
+                            "autoplay_failed",
+                            "⚠️ Autoplay couldn't find a related song to play next, so the stream has ended.",
+                        )
+                    )
+
+                related.user = "Autoplay"
+                queue.add(chat_id, related)
+                media = queue.get_current(chat_id)
+                continue
+
+            await self.stop(chat_id)
+            return await msg.edit_text(
+                _lang["error_no_file"].format(config.SUPPORT_CHAT)
+            )
 
         media.message_id = msg.id
         await self.play_media(chat_id, msg, media)
