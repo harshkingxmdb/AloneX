@@ -20,6 +20,13 @@ class Inline:
             [[self.ikb(text=text, callback_data=f"thumb_toggle {chat_id}", style=style)]]
         )
 
+    def vclogger_markup(self, chat_id: int, enabled: bool) -> types.InlineKeyboardMarkup:
+        text = "✅ enabled" if enabled else "❌ disabled"
+        style = ButtonStyle.SUCCESS if enabled else ButtonStyle.DANGER
+        return self.ikm(
+            [[self.ikb(text=text, callback_data=f"vclogger_toggle {chat_id}", style=style)]]
+        )
+
     def autoplay_markup(self, _lang: dict) -> types.InlineKeyboardMarkup:
         return self.ikm(
             [
@@ -233,76 +240,5 @@ class Inline:
                         style=ButtonStyle.SUCCESS,
                     )
                 ]
-            ]
-        )
-
-    def settings_markup(
-        self, lang: dict, admin_only: bool, cmd_delete: bool, language: str, chat_id: int
-    ) -> types.InlineKeyboardMarkup:
-        return self.ikm(
-            [
-                [
-                    self.ikb(
-                        text=lang["play_mode"] + " ➜",
-                        callback_data="settings",
-                    ),
-                    self.ikb(text=admin_only, callback_data="settings play"),                ],
-                [
-                    self.ikb(
-                        text=lang["cmd_delete"] + " ➜",
-                        callback_data="settings",
-                    ),
-                    self.ikb(text=cmd_delete, callback_data="settings delete"),
-                ],
-                [
-                    self.ikb(
-                        text=lang["language"] + " ➜",
-                        callback_data="settings",
-                    ),
-                    self.ikb(text=lang_codes[language], callback_data="language"),
-                ],
-            ]
-        )
-
-    def start_key(
-        self, lang: dict, private: bool = False
-    ) -> types.InlineKeyboardMarkup:
-        rows = [
-            [
-                self.ikb(
-                    text=lang["add_me"],
-                    url=f"https://t.me/{app.username}?startgroup=true", style=ButtonStyle.PRIMARY
-                )
-            ],
-            [self.ikb(text=lang["help"], callback_data="help", style=ButtonStyle.DANGER)],
-        ]
-        if private:
-            rows += [
-                [
-                    self.ikb(text=lang["aloneowner"], url=config.OWNER_USERNAME, style=ButtonStyle.SUCCESS),
-                    self.ikb(text=lang["channel"], url=config.SUPPORT_CHANNEL, style=ButtonStyle.SUCCESS),
-                    self.ikb(
-                        text=lang["source"],
-                        url="https://github.com/TeamShonax/ShonaX", style=ButtonStyle.SUCCESS
-                    ),
-                ]
-            ]
-        else:
-            rows += [
-                [
-                    self.ikb(text=lang["support"], url=config.SUPPORT_CHAT, style=ButtonStyle.SUCCESS),
-                    self.ikb(text=lang["channel"], url=config.SUPPORT_CHANNEL, style=ButtonStyle.SUCCESS),
-                ],
-                [self.ikb(text=lang["language"], callback_data="language")],
-            ]
-        return self.ikm(rows)
-
-    def yt_key(self, link: str) -> types.InlineKeyboardMarkup:
-        return self.ikm(
-            [
-                [
-                    self.ikb(text="❐", copy_text=link),
-                    self.ikb(text="Youtube", url=link),
-                ],
             ]
         )
