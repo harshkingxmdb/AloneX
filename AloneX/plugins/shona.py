@@ -1,7 +1,7 @@
-# Copyright (c) 2025 TheHamkerAlone
+# Copyright (c) 2025 @THECDERQUEEN
 # Licensed under the MIT License.
-# This file is part of AloneXMusic
-
+# This file is part of @SHONA_BOTS
+#SHONA-DECODER
 
 from pyrogram import filters, types
 
@@ -22,8 +22,8 @@ async def _vc_invited(_, message: types.Message):
         return
 
     text = (
-        f"{message.from_user.mention} Iɴᴠɪᴛᴇᴅ "
-        f"{', '.join(invited)} Tᴏ Tʜᴇ Vɪᴅᴇᴏ Cʜᴀᴛ."
+        f"<blockquote>{message.from_user.mention} Iɴᴠɪᴛᴇᴅ "
+        f"{', '.join(invited)} Tᴏ Tʜᴇ Vɪᴅᴇᴏ Cʜᴀᴛ.</blockquote>"
     )
 
     try:
