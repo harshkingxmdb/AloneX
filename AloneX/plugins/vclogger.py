@@ -8,7 +8,7 @@ import asyncio
 from pyrogram import filters, types
 
 from AloneX import app, db, lang
-from AloneX.helpers import can_manage_vc
+from AloneX.helpers import buttons, can_manage_vc
 
 DELETE_DELAY = 7
 
@@ -26,14 +26,15 @@ async def _delete_later(message: types.Message) -> None:
 @can_manage_vc
 async def _vclogger(_, m: types.Message):
     if len(m.command) < 2:
-        status = await db.get_vc_logger(m.chat.id)
-        state = m.lang.get("vclogger_on", "Enabled") if status else m.lang.get(
-            "vclogger_off", "Disabled"
+        enabled = await db.get_vc_logger(m.chat.id)
+        state = "enabled" if enabled else "disabled"
+        await m.reply_text(
+            m.lang.get(
+                "vclogger_panel",
+                "Vc Logger Settings\n\nCurrent Status: {0}\n\nClick the button below to toggle the status:",
+            ).format(f"{'✅' if enabled else '❌'} {state}"),
+            reply_markup=buttons.vclogger_markup(m.chat.id, enabled),
         )
-        msg = await m.reply_text(
-            m.lang.get("vclogger_status", "VC Logger is currently: {0}").format(state)
-        )
-        asyncio.create_task(_delete_later(msg))
         return
 
     mode = m.command[1].lower()
