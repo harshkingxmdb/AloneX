@@ -1,3 +1,8 @@
+# Copyright (c) 2025 @THECDERQUEEN
+# Licensed under the MIT License.
+# This file is part of @SHONA_BOTS
+#SHONA-DECODER
+
 import asyncio
 import random
 from pyrogram import enums, filters, types
@@ -22,6 +27,14 @@ EFFECT_IDS = [
     5107584321108051014,
     5104841245755180586,
     5159385139981059251,
+]
+
+GROUP_WELCOME_GIFS = [
+    "https://litter.catbox.moe/k0in7v.mp4",
+    "https://litter.catbox.moe/m9wcwo.mp4",
+    "https://litter.catbox.moe/mk16ev.mp4",
+    "https://litter.catbox.moe/01eef5.mp4",
+    "https://litter.catbox.moe/3dlg1e.mp4",
 ]
 
 
@@ -141,6 +154,22 @@ async def _new_member(_, message: types.Message):
             except Exception:
                 pass
             return await message.chat.leave()
+
+        adder = message.from_user.mention if message.from_user else "there"
+        bot_mention = f"@{app.username}"
+        welcome_text = message.lang.get(
+            "group_welcome",
+            "Hey {0},\n\nThanks For Adding {1} In <b>{2}</b>.\n\n{1} Is Now Ready To Play Music.",
+        ).format(adder, bot_mention, message.chat.title)
+
+        try:
+            await message.reply_animation(
+                animation=random.choice(GROUP_WELCOME_GIFS),
+                caption=welcome_text,
+                reply_markup=buttons.welcome_markup(message.lang),
+            )
+        except Exception as e:
+            logger.error(f"[Start] Group welcome GIF failed: {e}")
 
         await asyncio.sleep(3)
         if await db.is_chat(message.chat.id):
