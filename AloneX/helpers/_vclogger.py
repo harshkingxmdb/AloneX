@@ -1,7 +1,7 @@
-# Copyright (c) 2025 TheHamkerAlone
+# Copyright (c) 2025 @THECDERQUEEN
 # Licensed under the MIT License.
-# This file is part of AloneXMusic
-
+# This file is part of @SHONA_BOTS
+#SHONA-DECODER
 
 import asyncio
 
@@ -109,3 +109,4 @@ class VCLogger:
             del self.join_count[key]
         for key in [k for k in self.user_cache if k[0] == chat_id]:
             del self.user_cache[key]
+
